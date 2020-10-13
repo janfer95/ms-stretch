@@ -9,13 +9,13 @@ setup(
                       'obspy'],
     entry_points = {
         'msnoise.plugins.table_def': [
-            'DefaultStations = msnoise_stretchplugin.default_table_def:DefaultStations',
+            'DefaultStations = ms_stretch.default_table_def:DefaultStations',
             ],
         'msnoise.plugins.admin_view': [
-            'DefaultStationsView = msnoise_stretchplugin.plugin_definition:DefaultStationsView',
+            'DefaultStationsView = ms_stretch.plugin_definition:DefaultStationsView',
             ],
         'msnoise.plugins.commands': [
-            'plot = msnoise_stretchplugin.plugin_definition:plot',
+            'plot = msn_stretch.plugin_definition:plot',
             ],
         },
     author = "Jannik Kühn",
@@ -23,6 +23,6 @@ setup(
     description = "An msnoise plugin to plot dvv curves using the \
                    stretching method",
     license = "EUPL-1.1",
-    url = "http://www.msnoise.org", # TODO: Add github?
+    url = "https://github.com/janfer95/ms_stretch",
     keywords="ambient seismic noise stretching"
 )
