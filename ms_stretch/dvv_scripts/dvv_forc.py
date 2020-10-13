@@ -20,7 +20,7 @@ from matplotlib.dates import DateFormatter
 from matplotlib.dates import MonthLocator
 
 from msnoise.api import *
-from libs.noiselibrary import get_dvv, get_filter_info, nicen_up_pairs
+from ..datautilities import get_dvv, get_filter_info, nicen_up_pairs
 
 
 def main(mov_stack=10, dttname="M", components='ZZ', filterid=1,
