@@ -42,8 +42,16 @@ def install():
     main()
 
 
+@click.command()
+def uninstall():
+    """ Create the Config table"""
+    from .uninstall import main
+    main()
+
+
 plot.add_command(forcing)
 plot.add_command(install)
+plot.add_command(uninstall)
 
 
 
