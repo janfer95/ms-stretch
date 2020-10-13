@@ -3,6 +3,53 @@ from flask_admin.contrib.sqla import ModelView
 from .default_table_def import DefaultStations
 
 
+@click.group()
+def plot():
+    """Sets up the plotting scripts for the stretching method plugin"""
+    pass
+
+
+@click.command()
+@click.option('-m', '--mov_stack', default=0, help='Plot specific mov stacks')
+@click.option('-c', '--comp', default="ZZ", help='Components (ZZ, ZR,...)')
+@click.option('-f', '--filterid', default='1', help='Filter ID', multiple=True)
+@click.option('-p', '--pairs', default=None, help='Plot (a) specific pair(s)',
+              multiple=True)
+@click.option('-F', '--forcing', default='prec', help='Choose forcing to \
+              display')
+@click.option('-a', '--ask', default=False, help='Ask which station to use \
+              for plotting natural forcings. Else default station is used.')
+@click.option('-t', '--type', default='points', help='Plot data with bars, \
+              errorbars or simple points.')
+@click.option('-s', '--show', help='Show interactively?',
+              default=True, type=bool)
+@click.option('-o', '--outfile', help='Output filename (?=auto)',
+              default=None, type=str)
+def forcing(mov_stack, components, filterid, pairs, forcing, ask, type,
+            show, outfile):
+    """Plot velocity curves obtained by the stretching method with
+    forcings defined in the arguments and configurations."""
+
+    from dvv_scripts.dvv_forc import main
+    main(mov_stack, components, filterid, pairs, forcing, ask, type,
+         show, outfile)
+
+
+@click.command()
+def install():
+    """ Create the Config table"""
+    from .install import main
+    main()
+
+
+plot.add_command(forcing)
+plot.add_command(install)
+
+
+
+
+####################### Class Definitions ##########################
+
 class DefaultStationsView(ModelView):
     # Disable model creation
     view_title = "MSNoise Default Stations Configuration"
@@ -18,27 +65,7 @@ class DefaultStationsView(ModelView):
     def __init__(self, session, **kwargs):
         # You can pass name and other parameters if you want to
         super(DefaultStationsView, self).__init__(DefaultStations, session,
-                                                endpoint="defaultstations",
-                                                name="Default Stations",
-                                                category="Configuration", **kwargs)
-
-@click.group()
-def plot():
-    """Sets up the plotting scripts for the stretching method plugin"""
-    pass
-
-@click.command()
-def forcing():
-    """Plot velocity curves obtained by the stretching method with
-    forcings defined in the arguments and configurations."""
-    print("For now I just say hi")
-
-plot.add_command(forcing)
-
-@click.command()
-def install():
-    """ Create the Config table"""
-    from .install import main
-    main()
-
-plot.add_command(install)
+                                                  endpoint="defaultstations",
+                                                  name="Default Stations",
+                                                  category="Configuration",
+                                                  **kwargs)
