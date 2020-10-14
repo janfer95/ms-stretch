@@ -24,7 +24,7 @@ from ..datautilities import get_dvv, get_filter_info, nicen_up_pairs
 
 
 def main(mov_stack=10, components='ZZ', filterid='1', pairs=None,
-         forcing='prec', ask=False, type='points', show=True, outfile=None):
+         forcing='prec', ask=False, show=True, outfile=None):
 
     db = connect()
 
@@ -112,6 +112,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None,
     dir = defaults.at[forcing, 'folder_name']
     name = defaults.at[forcing, 'forcing']
     unit = defaults.at[forcing, 'unit']
+    type = defaults.at[forcing, 'plot_type']
 
     if ask:
         stas = ask_stations(dir)

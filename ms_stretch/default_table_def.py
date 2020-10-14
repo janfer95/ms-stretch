@@ -26,6 +26,10 @@ class DefaultStations(Base):
 
     :type unit: str
     :param unit: The unit of the forcing plotted. Used for y label.
+
+    :type plot_type: str
+    :param plot_type: Which type of plotting to use. Can be points, bars,
+                      cumsum bars, or errorbars.
     """
     __tablename__ = "default-stations"
     ref = Column(Integer, primary_key=True)
@@ -34,11 +38,14 @@ class DefaultStations(Base):
     folder_name = Column(String(255))
     default_station = Column(String(255))
     unit = Column(String(255))
+    plot_type = Column(String(255))
 
-    def __init__(self, forcing, name, folder_name, default_station, unit):
+    def __init__(self, forcing, name, folder_name, default_station,
+                 unit, plot_type):
         """"""
         self.forcing = forcing
         self.name = name
         self.folder_name = folder_name
         self.default_station = default_station
         self.unit = unit
+        self.plot_type = plot_type
