@@ -23,9 +23,9 @@ from msnoise.api import *
 from ..datautilities import get_dvv, get_filter_info, nicen_up_pairs
 
 
-def main(mov_stack=10, dttname="M", components='ZZ', filterid=1,
-         pairs=[], showALL=False, show=False, outfile=None, forcing='prec',
-         ask=False, type='points'):
+def main(mov_stack=10, components='ZZ', filterid='1', pairs=None,
+         forcing='prec', ask=False, type='points', show=True, outfile=None):
+
     db = connect()
 
     start, end, datelist = build_movstack_datelist(db)

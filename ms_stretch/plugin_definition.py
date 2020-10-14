@@ -10,8 +10,8 @@ def plot():
 
 
 @click.command()
-@click.option('-m', '--mov_stack', default=0, help='Plot specific mov stacks')
-@click.option('-c', '--comp', default="ZZ", help='Components (ZZ, ZR,...)')
+@click.option('-m', '--mov_stack', default=10, help='Plot specific mov stacks')
+@click.option('-c', '--components', default="ZZ", help='Components (ZZ, ZR,...)')
 @click.option('-f', '--filterid', default='1', help='Filter ID', multiple=True)
 @click.option('-p', '--pairs', default=None, help='Plot (a) specific pair(s)',
               multiple=True)
@@ -30,9 +30,27 @@ def forcing(mov_stack, components, filterid, pairs, forcing, ask, type,
     """Plot velocity curves obtained by the stretching method with
     forcings defined in the arguments and configurations."""
 
-    from dvv_scripts.dvv_forc import main
+    from .dvv_scripts.dvv_forc import main
     main(mov_stack, components, filterid, pairs, forcing, ask, type,
          show, outfile)
+
+
+@click.command()
+@click.option('-m', '--mov_stack', default=10, help='Plot specific mov stacks')
+@click.option('-c', '--components', default="ZZ", help='Components (ZZ, ZR,...)')
+@click.option('-f', '--filterid', default='1', help='Filter ID', multiple=True)
+@click.option('-p', '--pairs', default=None, help='Plot (a) specific pair(s)',
+              multiple=True)
+@click.option('-s', '--show', help='Show interactively?',
+              default=True, type=bool)
+@click.option('-o', '--outfile', help='Output filename (?=auto)',
+              default=None, type=str)
+def dvv(mov_stack, components, filterid, pairs, show, outfile):
+    """Plot velocity curves obtained by the stretching method with
+    forcings defined in the arguments and configurations."""
+
+    from .dvv_scripts.dvv_mov import main
+    main(mov_stack, components, filterid, pairs, show, outfile)
 
 
 @click.command()
@@ -50,6 +68,7 @@ def uninstall():
 
 
 plot.add_command(forcing)
+plot.add_command(dvv)
 plot.add_command(install)
 plot.add_command(uninstall)
 
