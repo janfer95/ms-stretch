@@ -57,17 +57,17 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None,
             first_plot = False
 
         # TODO: Maybe check for same filter, so that label can be shortened
-        if pairs[0] == "all" and filter_len == 1:
+        if "all" in pairs and filter_len == 1:
             tmp = dflist[0]["mean"]
             plt.plot(tmp.index, tmp.values, ".", markersize=11, label="mean")
             tmp = dflist[0]["median"]
             plt.plot(tmp.index, tmp.values, ".", markersize=11, label="median")
-        elif pairs[0] == "all" and filter_len > 1:
+        elif "all" in pairs and filter_len > 1:
             # TODO: Maybe add option to choose mean or median
             tmp = dflist[0]["mean"]
             label = "Filter %i, %i-%is" % (int(filter), minlags[i], endlags[i])
             plt.plot(tmp.index, tmp.values, ".", markersize=11, label=label)
-        elif pairs[0] != "all" and filter_len == 1:
+        elif "all" not in pairs and filter_len == 1:
             max_len = 0
             for df, pair in zip(dflist, nice_pairs):
                 tmp = df["mean"]
@@ -147,7 +147,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None,
     plt.legend()
     # Station list without the brackets
     stas_string = str(stas)[1:-1]
-    if 'all' in stas:
+    if "all" in stas:
         plt.title("%s data for all the stations" % name)
     elif len(stas) == 1:
         plt.title("%s data for station: %s" % (name, stas_string))
@@ -159,7 +159,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None,
     for i, filterid in enumerate(filterids):
         title += ('Filter %d (%.2f - %.2f Hz), Lag time window %.1f - %.1fs \n' % (
                   int(filterid[0:2]), lows[i], highs[i], minlags[i], endlags[i]))
-    if pairs[0] == 'all':
+    if "all" in pairs:
         title += "Average over all pairs"
     else:
         title += "Pairs: %s" % str(nice_pairs)[1:-1]

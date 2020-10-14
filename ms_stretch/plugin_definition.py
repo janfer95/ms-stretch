@@ -36,7 +36,7 @@ def forcing(mov_stack, components, filterid, pairs, forcing, ask, type,
 
 
 @click.command()
-@click.option('-m', '--mov_stack', default=10, help='Plot specific mov stacks')
+@click.option('-m', '--mov_stack', default=0, help='Plot specific mov stacks')
 @click.option('-c', '--components', default="ZZ", help='Components (ZZ, ZR,...)')
 @click.option('-f', '--filterid', default='1', help='Filter ID', multiple=True)
 @click.option('-p', '--pairs', default=None, help='Plot (a) specific pair(s)',
@@ -46,10 +46,28 @@ def forcing(mov_stack, components, filterid, pairs, forcing, ask, type,
 @click.option('-o', '--outfile', help='Output filename (?=auto)',
               default=None, type=str)
 def dvv(mov_stack, components, filterid, pairs, show, outfile):
-    """Plot velocity curves obtained by the stretching method with
-    forcings defined in the arguments and configurations."""
+    """Plot velocity curves obtained by the stretching method in
+    the standard msnoise way. Multiple filters are possible."""
 
     from .dvv_scripts.dvv_mov import main
+    main(mov_stack, components, filterid, pairs, show, outfile)
+
+
+@click.command()
+@click.option('-m', '--mov_stack', default=0, help='Plot specific mov stacks')
+@click.option('-c', '--components', default="ZZ", help='Components (ZZ, ZR,...)')
+@click.option('-f', '--filterid', default='1', help='Filter ID')
+@click.option('-p', '--pairs', default=None, help='Plot (a) specific pair(s)',
+              multiple=True)
+@click.option('-s', '--show', help='Show interactively?',
+              default=True, type=bool)
+@click.option('-o', '--outfile', help='Output filename (?=auto)',
+              default=None, type=str)
+def corr(mov_stack, components, filterid, pairs, show, outfile):
+    """Plot velocity curves obtained by the stretching method with
+    their respective correlation coefficients in a subplot."""
+
+    from .dvv_scripts.dvv_corr import main
     main(mov_stack, components, filterid, pairs, show, outfile)
 
 
@@ -69,6 +87,7 @@ def uninstall():
 
 plot.add_command(forcing)
 plot.add_command(dvv)
+plot.add_command(corr)
 plot.add_command(install)
 plot.add_command(uninstall)
 

@@ -111,7 +111,7 @@ def get_dvv(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
     """
 
     db = ms.connect()
-    #Treat components and pairs input
+    # Treat components and pairs input
     if pairs:
         pairs = pairs.split(",")
     else:
@@ -124,20 +124,22 @@ def get_dvv(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
         else:
             comps = comps.split(",")
 
-    #Norm the filterid, add a 0 when needed
+    # Norm the filterid, add a 0 when needed
     idx = filterid.find("_")
     if len(filterid[:idx]) == 2:
         pass
     else:
         filterid = "0" + filterid
 
+    # Average over certain pairs or over all
+    # Usually only one pair or all are used
     for pair in pairs:
         first = True
         for comp in comps:
             filedir = os.path.join("STR","%s" % filterid,
                                "%03i_DAYS" % mov_stack, comp)
             #Either get all stations or only selected pairs
-            if pairs[0] == "all":
+            if "all" in pairs:
                 listfiles = os.listdir(path=filedir)
             else:
                 file = pair + ".csv"
@@ -155,9 +157,9 @@ def get_dvv(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
                     continue
 
                 # Merge Dataframes for later averaging
-                dftemp = pd.read_csv(rf, index_col=0,
+                df_temp = pd.read_csv(rf, index_col=0,
                                      parse_dates=True).iloc[:,0].to_frame()
-                df = pd.merge(df, dftemp, left_index=True,
+                df = pd.merge(df, df_temp, left_index=True,
                               right_index=True, how='outer')
 
     df.sort_values(by=['Date'])
@@ -166,6 +168,80 @@ def get_dvv(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
     data = {"mean": col1, "median": col2}
     dvv_data = pd.DataFrame(data, index=df.index)
     return dvv_data
+
+
+def get_corr(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
+    """
+    Return the correlation coefficients, averaged over the specified
+    parameters. Data structure has to be as in the standard msnoise settings.
+
+    input:
+        comps: List with components to average over
+        mov_stack: Moving Stack Days used
+        filterid: Filter used
+
+    output:
+        Array with the averaged dvv values
+    """
+
+    db = ms.connect()
+    # Treat components and pairs input
+    if pairs:
+        pairs = pairs.split(",")
+    else:
+        pairs = ["all"]
+
+    # Accepts also string divided by commas
+    if type(comps) is not list:
+        if len(comps) == 1:
+            comps = [comps]
+        else:
+            comps = comps.split(",")
+
+    # Norm the filterid, add a 0 when needed
+    idx = filterid.find("_")
+    if len(filterid[:idx]) == 2:
+        pass
+    else:
+        filterid = "0" + filterid
+
+    # Average over certain pairs or over all
+    # Usually only one pair or all are used
+    for pair in pairs:
+        first = True
+        for comp in comps:
+            filedir = os.path.join("STR","%s" % filterid,
+                               "%03i_DAYS" % mov_stack, comp)
+            #Either get all stations or only selected pairs
+            if "all" in pairs:
+                listfiles = os.listdir(path=filedir)
+            else:
+                file = pair + ".csv"
+                listfiles = [file]
+
+            for file in listfiles:
+                rf = os.path.join("STR","%s" % filterid,
+                                  "%03i_DAYS" % mov_stack, comp, file)
+
+                # Save the first df to be the reference
+                if first:
+                    df = pd.read_csv(rf, index_col=0,
+                                     parse_dates=True).iloc[:,1].to_frame()
+                    first = False
+                    continue
+
+                # Merge Dataframes for later averaging
+                df_temp = pd.read_csv(rf, index_col=0,
+                                     parse_dates=True).iloc[:,1].to_frame()
+                df = pd.merge(df, df_temp, left_index=True,
+                              right_index=True, how='outer')
+
+    df.sort_values(by=['Date'])
+    col1 = df.mean(axis=1).values
+    col2 = df.median(axis=1).values
+    data = {"mean": col1, "median": col2}
+    corr_data = pd.DataFrame(data, index=df.index)
+    return corr_data
 
 
 def get_dvv_mat(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
@@ -211,7 +287,7 @@ def get_dvv_mat(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
             filedir = os.path.join("STR_Mat","%s" % filterid,
                                "%03i_DAYS" % mov_stack, comp)
             #Either get all stations or only selected pairs
-            if pairs[0] == "all":
+            if "all" in pairs:
                 listfiles = os.listdir(path=filedir)
             else:
                 file = pair + ".csv"
@@ -223,17 +299,17 @@ def get_dvv_mat(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
 
                 #Save the first df to be the reference
                 if first:
-                    dfmed = pd.read_csv(rf, index_col=0,
+                    df_med = pd.read_csv(rf, index_col=0,
                                         parse_dates=True)
                     first = False
                     continue
 
                 #Start averaging over all components
-                dftemp = pd.read_csv(rf, index_col=0,
+                df_temp = pd.read_csv(rf, index_col=0,
                                      parse_dates=True)
-                dfmed = pd.concat([dfmed, dftemp])
+                df_med = pd.concat([df_med, df_temp])
 
-    coeff_mat = dfmed.groupby('Date').mean()
+    coeff_mat = df_med.groupby('Date').mean()
     #Compute dvv from averaged coefficient matrix
     str_range = float(ms.get_config(db, "stretching_max"))
     nstr = int(ms.get_config(db, "stretching_nsteps"))
