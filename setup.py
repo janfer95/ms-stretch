@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='msnoise_stretchingplots',
+    name='ms_stretch',
     version='0.1a',
     packages=find_packages(),
     include_package_data=True,
@@ -15,7 +15,7 @@ setup(
             'DefaultStationsView = ms_stretch.plugin_definition:DefaultStationsView',
             ],
         'msnoise.plugins.commands': [
-            'plot = msn_stretch.plugin_definition:plot',
+            'plot = ms_stretch.plugin_definition:plot',
             ],
         },
     author = "Jannik Kühn",

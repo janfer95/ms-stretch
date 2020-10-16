@@ -33,18 +33,18 @@ class DefaultStations(Base):
     """
     __tablename__ = "default-stations"
     ref = Column(Integer, primary_key=True)
-    name = Column(String(255))
+    short_name = Column(String(255))
     forcing = Column(String(255))
     folder_name = Column(String(255))
     default_station = Column(String(255))
     unit = Column(String(255))
     plot_type = Column(String(255))
 
-    def __init__(self, forcing, name, folder_name, default_station,
+    def __init__(self, short_name, forcing, folder_name, default_station,
                  unit, plot_type):
         """"""
+        self.short_name = short_name
         self.forcing = forcing
-        self.name = name
         self.folder_name = folder_name
         self.default_station = default_station
         self.unit = unit

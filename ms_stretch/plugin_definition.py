@@ -125,7 +125,7 @@ class DefaultStationsView(ModelView):
     can_delete = True
     page_size = 50
     # Override displayed fields
-    column_list = ('forcing', 'short_name', 'folder_name',
+    column_list = ('short_name', 'forcing', 'folder_name',
                    'default_station', 'unit', 'plot_type')
 
     def __init__(self, session, **kwargs):
