@@ -20,6 +20,7 @@ from matplotlib.dates import DateFormatter
 from matplotlib.dates import MonthLocator
 
 from msnoise.api import *
+from ..datautilities import get_dvv, get_filter_info, nicen_up_pairs
 
 
 def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, show=False,
@@ -33,7 +34,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, show=False,
     # Since there is only one filter:
     filterid, low, high = filterids[0], lows[0], highs[0]
     minlag, endlag = minlags[0], endlags[0]
-    
+
     pairs, nice_pairs = nicen_up_pairs(pairs)
 
     if components.count(","):

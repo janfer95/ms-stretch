@@ -3,6 +3,8 @@ import os
 import glob
 import re
 
+from msnoise.api import *
+
 def ask_stations(dir):
     stas = []
 
@@ -110,7 +112,7 @@ def get_dvv(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
         Array with the averaged dvv values
     """
 
-    db = ms.connect()
+    db = connect()
     # Treat components and pairs input
     if pairs:
         pairs = pairs.split(",")
@@ -184,7 +186,7 @@ def get_corr(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
         Array with the averaged dvv values
     """
 
-    db = ms.connect()
+    db = connect()
     # Treat components and pairs input
     if pairs:
         pairs = pairs.split(",")
@@ -260,7 +262,7 @@ def get_dvv_mat(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
         coeff_mat: Coefficient matrix averaged over given comps and pairs
     """
 
-    db = ms.connect()
+    db = connect()
     #Treat components and pairs input
     if pairs:
         pairs = pairs.split(",")
@@ -311,8 +313,8 @@ def get_dvv_mat(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
 
     coeff_mat = df_med.groupby('Date').mean()
     #Compute dvv from averaged coefficient matrix
-    str_range = float(ms.get_config(db, "stretching_max"))
-    nstr = int(ms.get_config(db, "stretching_nsteps"))
+    str_range = float(get_config(db, "stretching_max"))
+    nstr = int(get_config(db, "stretching_nsteps"))
     alldeltas = []
     allcoeffs = coeff_mat.values
     deltas = 1 + np.linspace(-str_range, str_range, nstr)
@@ -325,6 +327,8 @@ def get_dvv_mat(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
 
 
 def get_filter_info(filterid):
+    db = connect()
+
     filterids = []
     minlags = []
     endlags = []
@@ -350,7 +354,7 @@ def get_filter_info(filterid):
         minlags.append(minlag)
         endlags.append(endlag)
 
-    for filter in filterids:
+    for filterid in filterids:
         for filterdb in get_filters(db, all=True):
             if int(filterid[0:2]) == filterdb.ref:
                 lows.append(float(filterdb.low))
@@ -373,6 +377,7 @@ def nicen_up_pairs(pairs):
     #If there is no pair passed, pass keyword "all", else nicen them up
     if len(pairs) == 0:
         pairs = ["all"]
+        nice_pairs = ["all"]
     else:
         nice_pairs = []
         for pair in pairs:

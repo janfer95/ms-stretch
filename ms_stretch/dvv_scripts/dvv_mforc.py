@@ -23,6 +23,7 @@ from matplotlib.dates import DateFormatter
 from matplotlib.dates import MonthLocator
 
 from msnoise.api import *
+from ..datautilities import get_dvv, get_filter_info, nicen_up_pairs
 
 
 def main(mov_stack=10, components='ZZ', filterid='1', pairs=None,
@@ -265,7 +266,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None,
         title += "Pairs: %s" % str(nice_pairs)[1:-1]
 
     plt.suptitle(title)
-    
+
     if outfile:
         if outfile.startswith("?"):
             if len(mov_stacks) == 1:

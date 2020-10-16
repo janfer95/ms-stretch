@@ -20,6 +20,7 @@ from matplotlib.dates import DateFormatter
 from matplotlib.dates import MonthLocator
 
 from msnoise.api import *
+from ..datautilities import get_dvv, get_filter_info, nicen_up_pairs
 
 
 
@@ -58,7 +59,7 @@ def main(mov_stack=None, components='ZZ', filterid='1', pairs=None,
         for j, filterid in enumerate(filterids):
             dflist = []
             for pair in pairs:
-                dvv_data = get_dvv(mov_stack=mov_stack, comps=comps,
+                dvv_data = get_dvv(mov_stack=mov_stack, comps=components,
                                    filterid=filterid, pairs=pair)
                 dflist.append(dvv_data)
 
@@ -70,12 +71,14 @@ def main(mov_stack=None, components='ZZ', filterid='1', pairs=None,
             # TODO: Maybe check for same filter, so that label can be shortened
             if pairs[0] == "all" and filter_len == 1:
                 tmp = dflist[0]["mean"]
+                id = tmp.index
                 plt.plot(tmp.index, tmp.values, ".", markersize=11, label="mean")
                 tmp = dflist[0]["median"]
                 plt.plot(tmp.index, tmp.values, ".", markersize=11, label="median")
             elif pairs[0] == "all" and filter_len > 1:
                 # TODO: Maybe add option to choose mean or median
                 tmp = dflist[0]["mean"]
+                id = tmp.index
                 label = "Filter %i, %i-%is" % (int(filter), minlags[j], endlags[j])
                 plt.plot(tmp.index, tmp.values, ".", markersize=11, label=label)
             elif pairs[0] != "all" and filter_len == 1:
