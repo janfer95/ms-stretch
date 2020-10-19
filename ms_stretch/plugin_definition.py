@@ -15,20 +15,25 @@ def plot():
 @click.option('-f', '--filterid', default='1', help='Filter ID', multiple=True)
 @click.option('-p', '--pairs', default=None, help='Plot (a) specific pair(s)',
               multiple=True)
-@click.option('-F', '--forcing', default='prec', help='Choose forcing to \
-              display')
-@click.option('-a', '--ask', default=False, help='Ask which station to use \
-              for plotting natural forcings. Else default station is used.')
+@click.option('-C', '--custom', default=False, help='Customize pair names.')
+@click.option('-F', '--forcing', default='prec', help='Choose forcing to'
+              ' display')
+@click.option('-a', '--ask', default=False, help='Ask which station to use '
+              'for plotting natural forcings. Else default station is used.')
 @click.option('-s', '--show', help='Show interactively?',
               default=True, type=bool)
 @click.option('-o', '--outfile', help='Output filename (?=auto)',
               default=None, type=str)
-def forcing(mov_stack, components, filterid, pairs, forcing, ask, show, outfile):
-    """Plot velocity curves obtained by the stretching method with
+def forcing(mov_stack, components, filterid, pairs, custom, forcing, ask,
+            show, outfile):
+    """ Plot dvv curves with a forcing as subplot.
+
+    Plot dvv velocity curves obtained by the stretching method with
     forcings defined in the arguments and configurations."""
 
     from .dvv_scripts.dvv_forc import main
-    main(mov_stack, components, filterid, pairs, forcing, ask, show, outfile)
+    main(mov_stack, components, filterid, pairs, custom, forcing,
+         ask, show, outfile)
 
 
 @click.command()
@@ -37,6 +42,7 @@ def forcing(mov_stack, components, filterid, pairs, forcing, ask, show, outfile)
 @click.option('-f', '--filterid', default='1', help='Filter ID', multiple=True)
 @click.option('-p', '--pairs', default=None, help='Plot (a) specific pair(s)',
               multiple=True)
+@click.option('-C', '--custom', default=False, help='Customize pair names.')
 @click.option('-F', '--forcings', default=['prec'], help='Choose forcings to '
               'display.', multiple=True)
 @click.option('-a', '--ask', default=False, help='Ask which station to use \
@@ -45,13 +51,18 @@ def forcing(mov_stack, components, filterid, pairs, forcing, ask, show, outfile)
               default=True, type=bool)
 @click.option('-o', '--outfile', help='Output filename (?=auto)',
               default=None, type=str)
-def mforcing(mov_stack, components, filterid, pairs, forcings, ask,
+def mforcing(mov_stack, components, filterid, pairs, custom, forcings, ask,
              show, outfile):
-    """Plot velocity curves obtained by the stretching method with multiple
-    forcings defined in the arguments and configurations."""
+    """Plot dvv curves with up to 3 forcings.
+
+    Plot dvv velocity curves obtained by the stretching method with multiple
+    forcings defined in the arguments and configurations. The first
+    forcing is plotted together with the dvv curve. The two other ones
+    are displayed in a subplot."""
 
     from .dvv_scripts.dvv_mforc import main
-    main(mov_stack, components, filterid, pairs, forcings, ask, show, outfile)
+    main(mov_stack, components, filterid, pairs, custom, forcings,
+         ask, show, outfile)
 
 
 @click.command()
@@ -60,16 +71,19 @@ def mforcing(mov_stack, components, filterid, pairs, forcings, ask,
 @click.option('-f', '--filterid', default='1', help='Filter ID', multiple=True)
 @click.option('-p', '--pairs', default=None, help='Plot (a) specific pair(s)',
               multiple=True)
+@click.option('-C', '--custom', default=False, help='Customize pair names.')
 @click.option('-s', '--show', help='Show interactively?',
               default=True, type=bool)
 @click.option('-o', '--outfile', help='Output filename (?=auto)',
               default=None, type=str)
-def dvv(mov_stack, components, filterid, pairs, show, outfile):
-    """Plot velocity curves obtained by the stretching method in
+def dvv(mov_stack, components, filterid, pairs, custom, show, outfile):
+    """Plot dvv curves in standard msnoise format.
+
+    Plot velocity curves obtained by the stretching method in
     the standard msnoise way. Multiple filters are possible."""
 
     from .dvv_scripts.dvv_mov import main
-    main(mov_stack, components, filterid, pairs, show, outfile)
+    main(mov_stack, components, filterid, pairs, custom, show, outfile)
 
 
 @click.command()
@@ -78,28 +92,38 @@ def dvv(mov_stack, components, filterid, pairs, show, outfile):
 @click.option('-f', '--filterid', default='1', help='Filter ID')
 @click.option('-p', '--pairs', default=None, help='Plot (a) specific pair(s)',
               multiple=True)
+@click.option('-C', '--custom', default=False, help='Customize pair names.')
 @click.option('-s', '--show', help='Show interactively?',
               default=True, type=bool)
 @click.option('-o', '--outfile', help='Output filename (?=auto)',
               default=None, type=str)
-def corr(mov_stack, components, filterid, pairs, show, outfile):
-    """Plot velocity curves obtained by the stretching method with
+def corr(mov_stack, components, filterid, pairs, custom, show, outfile):
+    """Plot dvv curves with correlation coefficients.
+
+    Plot velocity curves obtained by the stretching method with
     their respective correlation coefficients in a subplot."""
 
     from .dvv_scripts.dvv_corr import main
-    main(mov_stack, components, filterid, pairs, show, outfile)
+    main(mov_stack, components, filterid, pairs, custom, show, outfile)
 
 
 @click.command()
 def install():
-    """ Create the Config table"""
+    """Install the default stations table in admin page.
+
+    Create a table in the database called Default Stations
+    that is used for the forcing commands. Database table
+    can be dropped with the uninstall command."""
     from .install import main
     main()
 
 
 @click.command()
 def uninstall():
-    """ Create the Config table"""
+    """Drop default stations table in database.
+
+    Deletes Default Stations entry in the current database. Normally
+    the entry should also disappear in the admin viewer."""
     from .uninstall import main
     main()
 

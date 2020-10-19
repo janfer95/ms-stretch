@@ -1,15 +1,11 @@
 """
-This plot shows the final output of MSNoise.
+Plot dvv curves in standard msnoise format.
 
-
-.. include:: clickhelp/msnoise-plot-dvv.rst
-
-
+Plot velocity curves obtained by the stretching method in
+the standard msnoise way. Multiple filters are possible.
 Example:
 
-``msnoise plot dvv`` will plot all defaults:
-
-.. image:: .static/dvv.png
+``msnoise plugin plot dvv`` will plot all defaults.
 
 """
 
@@ -24,12 +20,14 @@ from ..datautilities import get_dvv, get_filter_info, nicen_up_pairs
 
 
 
-def main(mov_stack=None, components='ZZ', filterid='1', pairs=None,
+def main(mov_stack=None, components='ZZ', filterid='1', pairs=None, custom=False,
          show=False, outfile=None):
 
     db = connect()
 
     start, end, datelist = build_movstack_datelist(db)
+    filterids, lows, highs, minlags, endlags = get_filter_info(filterid)
+    pairs, nice_pairs = nicen_up_pairs(pairs, custom)
 
     if mov_stack != 0:
         mov_stacks = [mov_stack, ]
@@ -39,9 +37,6 @@ def main(mov_stack=None, components='ZZ', filterid='1', pairs=None,
             mov_stacks = [int(mov_stack), ]
         else:
             mov_stacks = [int(mi) for mi in mov_stack.split(',')]
-
-    filterids, lows, highs, minlags, endlags = get_filter_info(filterid)
-    pairs, nice_pairs = nicen_up_pairs(pairs)
 
     if components.count(","):
         components = components.split(",")
@@ -60,7 +55,7 @@ def main(mov_stack=None, components='ZZ', filterid='1', pairs=None,
             dflist = []
             for pair in pairs:
                 dvv_data = get_dvv(mov_stack=mov_stack, comps=components,
-                                   filterid=filterid, pairs=pair)
+                                   filterid=filterid, pairs_av=pair)
                 dflist.append(dvv_data)
 
             # Plot dvv mean and median or multiple dvv

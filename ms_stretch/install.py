@@ -1,3 +1,9 @@
+"""Install the default stations table in admin page.
+
+Create a table in the database called Default Stations
+that is used for the forcing commands. Database table
+can be dropped with the uninstall command."""
+
 from msnoise.api import *
 
 from .default_table_def import DefaultStations

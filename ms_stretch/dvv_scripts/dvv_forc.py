@@ -1,16 +1,12 @@
-"""
-This plot shows the final output of MSNoise.
+""" Plot dvv curves with a forcing as subplot.
 
-
-.. include:: clickhelp/msnoise-plot-dvv.rst
-
+Plot dvv velocity curves obtained by the stretching method with
+forcings defined in the arguments and configurations.
 
 Example:
 
-``msnoise plot dvv`` will plot all defaults:
-
-.. image:: .static/dvv.png
-
+``msnoise plugin plot forcing -f 1_2_4`` will plot a dvv curve with all defaults,
+where filter 1 was used and the stretching window was 2s-4s.
 """
 
 import matplotlib.gridspec as gridspec
@@ -23,15 +19,14 @@ from msnoise.api import *
 from ..datautilities import get_dvv, get_filter_info, nicen_up_pairs
 
 
-def main(mov_stack=10, components='ZZ', filterid='1', pairs=None,
+def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
          forcing='prec', ask=False, show=True, outfile=None):
 
     db = connect()
 
     start, end, datelist = build_movstack_datelist(db)
-
     filterids, lows, highs, minlags, endlags = get_filter_info(filterid)
-    pairs, nice_pairs = nicen_up_pairs(pairs)
+    pairs, nice_pairs = nicen_up_pairs(pairs, custom)
 
     if components.count(","):
         components = components.split(",")
@@ -48,7 +43,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None,
         dflist = []
         for pair in pairs:
             dvv_data = get_dvv(mov_stack=mov_stack, comps=comps,
-                               filterid=filterid, pairs=pair)
+                               filterid=filterid, pairs_av=pair)
             dflist.append(dvv_data)
 
         # Plot dvv mean and median or multiple dvv

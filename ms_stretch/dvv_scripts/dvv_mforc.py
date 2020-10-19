@@ -1,18 +1,15 @@
 """
-This plot shows the final output of MSNoise.
-Velocity variation gets plotted with Precipitation,
-temperature, and NDVI forcings. Multiple pairs or
-filters allowed.
+Plot dvv curves with up to 3 forcings.
 
-
-.. include:: clickhelp/msnoise-plot-dvv.rst
-
+Plot dvv velocity curves obtained by the stretching method with multiple
+forcings defined in the arguments and configurations. The first
+forcing is plotted together with the dvv curve. The two other ones
+are displayed in a subplot.
 
 Example:
 
-``msnoise plot dvv`` will plot all defaults:
-
-.. image:: .static/dvv.png
+``msnoise plugin plot mforcing -f 1_2_4`` will plot a dvv curve with all defaults,
+where filter 1 was used and the stretching window was 2s-4s.
 
 """
 
@@ -26,13 +23,13 @@ from msnoise.api import *
 from ..datautilities import get_dvv, get_filter_info, nicen_up_pairs
 
 
-def main(mov_stack=10, components='ZZ', filterid='1', pairs=None,
+def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
          forcings=['prec'], ask=False, type='points', show=True, outfile=None):
     db = connect()
 
     start, end, datelist = build_movstack_datelist(db)
     filterids, lows, highs, minlags, endlags = get_filter_info(filterid)
-    pairs, nice_pairs = nicen_up_pairs(pairs)
+    pairs, nice_pairs = nicen_up_pairs(pairs, custom)
 
     if components.count(","):
         components = components.split(",")
@@ -52,7 +49,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None,
         dflist = []
         for pair in pairs:
             dvv_data = get_dvv(mov_stack=mov_stack, comps=comps,
-                               filterid=filterid, pairs=pair)
+                               filterid=filterid, pairs_av=pair)
             dflist.append(dvv_data)
 
         # Plot dvv mean and median or multiple dvv

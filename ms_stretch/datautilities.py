@@ -6,6 +6,19 @@ import re
 from msnoise.api import *
 
 def ask_stations(dir):
+    """
+    Asks which forcing stations to be used for plotting. Applies only if
+    default option was not chosen.
+
+    Input:
+        :type dir: str
+        :param dir: The directory to look for the stations.
+
+    Output:
+        :type stas: List of str
+        :param stas: List of file names with stations to be plotted.
+    """
+
     stas = []
 
     print("Choose any number of stations to be included.")
@@ -55,20 +68,23 @@ def get_pgv():
 
 
 def get_data(dir, stas):
-    # TODO: Update doc string
     """
-    Return specified daily precipitation data for the Hualien
-    region. Files must be stored in the 'precipitation' folder.
+    Get the specified forcing data, average it and return the data as a
+    pandas DataFrame along with the corresponding dates.
 
-    input:
-        source: String indicating source of precipitation data
-            'CWB' = Taiwanese Central Weather Bureau data
-            'Cal' = Calibration data from NASA
-            'HQ'  = High quality precipitation data from NASA
+    Input:
+        :type dir: str
+        :param dir: The directory to look for the stations.
 
-    output:
-        Array with the precipitation data
+        :type stas: List of strings
+        :param stas: List of file names with stations to be plotted.
+
+
+    Output:
+        :type data: pandas DataFrame
+        :param data: Daily averaged forcing DataFrame.
     """
+
     if 'all' in stas:
         file_list = glob.glob("/%s/*.csv" % dir)
     else:
@@ -98,18 +114,35 @@ def get_data(dir, stas):
     return data
 
 
-def get_dvv(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
+def get_dvv(mov_stack=10, comps="ZZ", filterid="1", pairs_av=None):
     """
-    Return dvv data, already averaged over the specified parameters. Data
-    structure has to be as in the standard msnoise settings.
+    Get the dvv data computed by the msnoise compute_stretch,
+    average it over the specified parameters and return the data
+    as a pandas DataFrame along with the corresponding dates.
 
-    input:
-        comps: List with components to average over
-        mov_stack: Moving Stack Days used
-        filterid: Filter used
+    Note: The pairs_av argument does not quite correspond to the
+    pairs argument in the plotting scripts. Here it stands for
+    the pairs to average over, in the plotting script the pairs
+    are the pairs to be plotted.
 
-    output:
-        Array with the averaged dvv values
+    Input:
+        :type mov_stack: int
+        :param mov_stack: Number of days that data is smoothed.
+
+        :type comps: str
+        :param comps: List of strings of components to be included.
+
+        :type filterid: str
+        :param filterid: Filter results to be plotted. Can contain
+        stretching time window information.
+
+        :type pairs_av: List of strings
+        :param pairs_av: List of pairs to be averaged over.
+
+
+    Output:
+        :type dvv_data: pandas DataFrame
+        :param dvv_data: Daily mean and median dvv data.
     """
 
     db = connect()
@@ -172,94 +205,43 @@ def get_dvv(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
     return dvv_data
 
 
-def get_corr(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
-    """
-    Return the correlation coefficients, averaged over the specified
-    parameters. Data structure has to be as in the standard msnoise settings.
-
-    input:
-        comps: List with components to average over
-        mov_stack: Moving Stack Days used
-        filterid: Filter used
-
-    output:
-        Array with the averaged dvv values
-    """
-
-    db = connect()
-    # Treat components and pairs input
-    if pairs:
-        pairs = pairs.split(",")
-    else:
-        pairs = ["all"]
-
-    # Accepts also string divided by commas
-    if type(comps) is not list:
-        if len(comps) == 1:
-            comps = [comps]
-        else:
-            comps = comps.split(",")
-
-    # Norm the filterid, add a 0 when needed
-    idx = filterid.find("_")
-    if len(filterid[:idx]) == 2:
-        pass
-    else:
-        filterid = "0" + filterid
-
-    # Average over certain pairs or over all
-    # Usually only one pair or all are used
-    for pair in pairs:
-        first = True
-        for comp in comps:
-            filedir = os.path.join("STR","%s" % filterid,
-                               "%03i_DAYS" % mov_stack, comp)
-            #Either get all stations or only selected pairs
-            if "all" in pairs:
-                listfiles = os.listdir(path=filedir)
-            else:
-                file = pair + ".csv"
-                listfiles = [file]
-
-            for file in listfiles:
-                rf = os.path.join("STR","%s" % filterid,
-                                  "%03i_DAYS" % mov_stack, comp, file)
-
-                # Save the first df to be the reference
-                if first:
-                    df = pd.read_csv(rf, index_col=0,
-                                     parse_dates=True).iloc[:,1].to_frame()
-                    first = False
-                    continue
-
-                # Merge Dataframes for later averaging
-                df_temp = pd.read_csv(rf, index_col=0,
-                                     parse_dates=True).iloc[:,1].to_frame()
-                df = pd.merge(df, df_temp, left_index=True,
-                              right_index=True, how='outer')
-
-    df.sort_values(by=['Date'])
-    col1 = df.mean(axis=1).values
-    col2 = df.median(axis=1).values
-    data = {"mean": col1, "median": col2}
-    corr_data = pd.DataFrame(data, index=df.index)
-    return corr_data
-
-
-def get_dvv_mat(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
+def get_dvv_mat(mov_stack=10, comps="ZZ", filterid="1", pairs_av=None):
     """
     Return dvv data, already averaged over the specified parameters. Input
     data is saved as coefficient matrices over time.
 
-    input:
-        comps: List with components to average over
-        mov_stack: Moving Stack Days used
-        filterid: Filter used
-        pairs: Which station pairs to compute
+    Get the dvv data computed by the msnoise compute_stretch,
+    average it over the specified parameters and return the data
+    as a pandas DataFrame along with the corresponding dates. The
+    averaging is done by first stacking each stretching
+    coefficient matrix and then extract the dvv values.
 
-    output:
-        dvv_data: Relative velocity variation time series in Dataframe
-        coeff_mat: Coefficient matrix averaged over given comps and pairs
+    Note: The pairs_av argument does not quite correspond to the
+    pairs argument in the plotting scripts. Here it stands for
+    the pairs to average over, in the plotting script the pairs
+    are the pairs to be plotted.
+
+    Input:
+        :type mov_stack: int
+        :param mov_stack: Number of days that data is smoothed.
+
+        :type comps: str
+        :param comps: List of strings of components to be included.
+
+        :type filterid: str
+        :param filterid: Filter results to be plotted. Can contain
+        stretching time window information.
+
+        :type pairs_av: List of strings
+        :param pairs_av: List of pairs to be averaged over.
+
+
+    Output:
+        :type dvv_data: pandas DataFrame
+        :param dvv_data: Daily mean and median dvv data.
+
+        :type coeff_mat: pandas DataFrame
+        :param coeff_mat: Coefficient matrix averaged over given parameters.
     """
 
     db = connect()
@@ -326,7 +308,119 @@ def get_dvv_mat(mov_stack=10, comps="ZZ", filterid="1", pairs=None):
     return dvv_data, coeff_mat
 
 
+def get_corr(mov_stack=10, comps="ZZ", filterid="1", pairs_av=None):
+    """
+    Return the correlation coefficients, averaged over the specified
+    parameters.
+
+    Input:
+        :type mov_stack: int
+        :param mov_stack: Number of days that data is smoothed.
+
+        :type comps: str
+        :param comps: List of strings of components to be included.
+
+        :type filterid: str
+        :param filterid: Filter results to be plotted. Can contain
+        stretching time window information.
+
+        :type pairs_av: List of strings
+        :param pairs_av: List of pairs to be averaged over.
+
+
+    Output:
+        :type corr_data: pandas DataFrame
+        :param corr_data: Daily mean and median dvv data.
+    """
+
+    db = connect()
+    # Treat components and pairs input
+    if pairs:
+        pairs = pairs.split(",")
+    else:
+        pairs = ["all"]
+
+    # Accepts also string divided by commas
+    if type(comps) is not list:
+        if len(comps) == 1:
+            comps = [comps]
+        else:
+            comps = comps.split(",")
+
+    # Norm the filterid, add a 0 when needed
+    idx = filterid.find("_")
+    if len(filterid[:idx]) == 2:
+        pass
+    else:
+        filterid = "0" + filterid
+
+    # Average over certain pairs or over all
+    # Usually only one pair or all are used
+    for pair in pairs:
+        first = True
+        for comp in comps:
+            filedir = os.path.join("STR","%s" % filterid,
+                               "%03i_DAYS" % mov_stack, comp)
+            #Either get all stations or only selected pairs
+            if "all" in pairs:
+                listfiles = os.listdir(path=filedir)
+            else:
+                file = pair + ".csv"
+                listfiles = [file]
+
+            for file in listfiles:
+                rf = os.path.join("STR","%s" % filterid,
+                                  "%03i_DAYS" % mov_stack, comp, file)
+
+                # Save the first df to be the reference
+                if first:
+                    df = pd.read_csv(rf, index_col=0,
+                                     parse_dates=True).iloc[:,1].to_frame()
+                    first = False
+                    continue
+
+                # Merge Dataframes for later averaging
+                df_temp = pd.read_csv(rf, index_col=0,
+                                     parse_dates=True).iloc[:,1].to_frame()
+                df = pd.merge(df, df_temp, left_index=True,
+                              right_index=True, how='outer')
+
+    df.sort_values(by=['Date'])
+    col1 = df.mean(axis=1).values
+    col2 = df.median(axis=1).values
+    data = {"mean": col1, "median": col2}
+    corr_data = pd.DataFrame(data, index=df.index)
+    return corr_data
+
+
 def get_filter_info(filterid):
+    """
+    Extract minlag, endlag, the lower and the higher frequency
+    boundary of the given filter. For that either directly the
+    input is used or the database. Filterid can be a list of
+    filters. Lastly, if needed a fill up 0 is added to the
+    filter for further processing.
+
+    Input:
+        :type filterid: List of str
+        :param filterid: Filters to extract information from.
+
+    Output:
+        :type filterids: List of str
+        :param filterids: Filter ids without extra info and padded 0.
+
+        :type lows: List of floats
+        :param lows: Lower frequency bound corresponding to filters.
+
+        :type highs: List of floats
+        :param highs: Higher frequency bound corresponding to filters.
+
+        :type minlags: List of floats
+        :param minlags: Start of stretching time window corresponding to filters.
+
+        :type endlags: List of floats
+        :param endlags: End of stretching time window corresponding to filters.
+    """
     db = connect()
 
     filterids = []
@@ -364,26 +458,52 @@ def get_filter_info(filterid):
     return filterids, lows, highs, minlags, endlags
 
 
-def nicen_up_pairs(pairs):
-    """ Formats the pairs list into a better
-    human-readable format for plotting.
-
-    input:
-        pairs: List of station pairs
-
-    output:
-        String of station pairs
+def nicen_up_pairs(pairs, custom=False):
     """
-    #If there is no pair passed, pass keyword "all", else nicen them up
+    If no pairs are passed, all is returned to signal that
+    it should be averaged over all pairs. Otherwise the
+    pairs are nicened up for plotting. Custom options are also
+    possible. A csv file "change_pairs.csv" with the substitions
+    to be made has to be created.
+
+    Input:
+        :type pairs: List of str
+        :param pairs: Pairs that are later to be plotted.
+
+        :type custom: Boolean
+        :param custom: Check file for custom options.
+
+    Output:
+        :type pairs: List of str
+        :param pairs: Pairs that are later to be plotted, maybe all.
+
+        :type nice_pairs: List of str
+        :param nice_pairs: Pairs that are easier to read and fit better on plot.
+
+    """
+
     if len(pairs) == 0:
         pairs = ["all"]
         nice_pairs = ["all"]
+    elif custom:
+        nice_pairs = []
+        df = pd.read_csv("change_pairs.csv", index_col=0, header=None)
+        for pair in pairs:
+            for i in range(len(df)):
+                val = df.iloc[i,0]
+                sub = df.iloc[i,1]
+                if i == 0:
+                    new_pair = pair.replace(val, sub)
+                    continue
+                new_pair = new_pair.replace(val, sub)
+            nice_pairs.append(new_pair)
     else:
         nice_pairs = []
         for pair in pairs:
-            new_pair = pair.replace("5K_","")
-            #Get rid of SW0 part, for less crammed visuals
-            new_pair = new_pair.replace("SW0", "")
+            # Change underscores to dots
+            new_pair = pair.replace("_", ".", 1)
+            new_pair = new_pair.reverse().replace("_", ".", 1)
+            new_pair = new_pair.replace("_", " ")
             nice_pairs.append(new_pair)
 
     return pairs, nice_pairs

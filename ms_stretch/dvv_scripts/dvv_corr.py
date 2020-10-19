@@ -1,16 +1,11 @@
-"""
-This plot shows the final output of MSNoise.
+"""Plot dvv curves with correlation coefficients.
 
-
-.. include:: clickhelp/msnoise-plot-dvv.rst
-
+Plot velocity curves obtained by the stretching method with
+their respective correlation coefficients in a subplot.
 
 Example:
 
-``msnoise plot dvv`` will plot all defaults:
-
-.. image:: .static/dvv.png
-
+``msnoise plugin plot corr`` will plot all defaults.
 """
 
 import matplotlib.gridspec as gridspec
@@ -23,19 +18,18 @@ from msnoise.api import *
 from ..datautilities import get_dvv, get_filter_info, nicen_up_pairs
 
 
-def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, show=False,
-         outfile=None):
+def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
+         show=False, outfile=None):
 
     db = connect()
 
     start, end, datelist = build_movstack_datelist(db)
-
     filterids, lows, highs, minlags, endlags = get_filter_info(filterid)
     # Since there is only one filter:
     filterid, low, high = filterids[0], lows[0], highs[0]
     minlag, endlag = minlags[0], endlags[0]
 
-    pairs, nice_pairs = nicen_up_pairs(pairs)
+    pairs, nice_pairs = nicen_up_pairs(pairs, custom)
 
     if components.count(","):
         components = components.split(",")
