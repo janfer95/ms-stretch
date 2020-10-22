@@ -15,7 +15,7 @@ setup(
             'DefaultStationsView = ms_stretch.plugin_definition:DefaultStationsView',
             ],
         'msnoise.plugins.commands': [
-            'plot = ms_stretch.plugin_definition:plot',
+            'stretch = ms_stretch.plugin_definition:stretch',
             ],
         },
     author = "Jannik Kühn",
