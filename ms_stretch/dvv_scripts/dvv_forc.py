@@ -16,14 +16,14 @@ from matplotlib.dates import DateFormatter
 from matplotlib.dates import MonthLocator
 
 from msnoise.api import *
-from ..api import get_dvv, get_filter_info, nicen_up_pairs, get_config
+from ..api import *
 
 
 def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
          forcing=None, ask=False, show=True, outfile=None):
 
     db = connect()
-
+    print(show)
     start, end, datelist = build_movstack_datelist(db)
     filterids, lows, highs, minlags, endlags = get_filter_info(filterid)
     pairs, nice_pairs = nicen_up_pairs(pairs, custom)
@@ -42,7 +42,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
     for i, filterid in enumerate(filterids):
         dflist = []
         for pair in pairs:
-            dvv_data = get_dvv(mov_stack=mov_stack, comps=comps,
+            dvv_data = get_dvv(mov_stack=mov_stack, comps=components,
                                filterid=filterid, pairs_av=pair)
             dflist.append(dvv_data)
 
@@ -54,13 +54,16 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
         # TODO: Maybe check for same filter, so that label can be shortened
         if "all" in pairs and filter_len == 1:
             tmp = dflist[0]["mean"]
+            id = tmp.index
             plt.plot(tmp.index, tmp.values, ".", markersize=11, label="mean")
             tmp = dflist[0]["median"]
             plt.plot(tmp.index, tmp.values, ".", markersize=11, label="median")
         elif "all" in pairs and filter_len > 1:
             # TODO: Maybe add option to choose mean or median
             tmp = dflist[0]["mean"]
-            label = "Filter %i, %i-%is" % (int(filter), minlags[i], endlags[i])
+            id = tmp.index
+            filter = int(filterid[0:2])
+            label = "Filter %i, %i-%is" % (filter, minlags[i], endlags[i])
             plt.plot(tmp.index, tmp.values, ".", markersize=11, label=label)
         elif "all" not in pairs and filter_len == 1:
             max_len = 0
@@ -70,7 +73,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
                 if len(tmp) > max_len:
                     max_len = len(tmp)
                     id = tmp.index
-                plt.plot(tmp.index, tmp, label=pair)
+                plt.plot(tmp.index, tmp, ".", markersize=11, label=pair)
         else:
             max_len = 0
             for df, pair in zip(dflist, nice_pairs):
@@ -80,8 +83,8 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
                     max_len = len(tmp)
                     id = tmp.index
                 label = ("Filter %i, %i-%is, %s" %
-                        (int(filter), minlags[i], endlags[i], pair))
-                plt.plot(tmp.index, tmp, label=pair)
+                        (int(filterid[0:2]), minlags[i], endlags[i], pair))
+                plt.plot(tmp.index, tmp, label=label)
 
     # Coordinate labels and grids
     left, right = id[0], id[-1]
@@ -96,7 +99,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
     else:
         plt.title('%i Days Smoothing' % mov_stack)
     plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=4,
-               ncol=2, borderaxespad=0.)
+               ncol=1, borderaxespad=0.)
 
 
     # Plot forcing
@@ -104,47 +107,47 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
 
     # load forcing default values, get first one in list if None is passed
     if not forcing:
-        forcing = get_config(db, isref=True, name=1,
-                             value='short_name', plugin='DefaultStations')
-    dir = get_config(db, name=forcing, value='folder_name',
-                     plugin='DefaultStations')
-    name = get_config(db, name=forcing, value='forcing',
-                     plugin='DefaultStations')
-    unit = get_config(db, name=forcing, value='unit',
-                     plugin='DefaultStations')
-    type = get_config(db, name=forcing, value='plot_type',
-                     plugin='DefaultStations')
+        forcing = get_config_p(db, isref=True, name=1,
+                               value='short_name', plugin='DefaultStations')
+    dir = get_config_p(db, name=forcing, value='folder_name',
+                       plugin='DefaultStations')
+    name = get_config_p(db, name=forcing, value='forcing',
+                        plugin='DefaultStations')
+    unit = get_config_p(db, name=forcing, value='unit',
+                        plugin='DefaultStations')
+    type = get_config_p(db, name=forcing, value='plot_type',
+                        plugin='DefaultStations')
 
     if ask:
         stas = ask_stations(dir)
     else:
-        stas = [get_config(db, name=forcing, value='default_station',
-                           plugin='DefaultStations')]
+        stas = [get_config_p(db, name=forcing, value='default_station',
+                             plugin='DefaultStations')]
 
-   data = get_data(dir, stas)
+    data = get_data(dir, stas)
+    data = data.loc[left:right]
 
     # Plot configurations
     if type == 'points':
-        plt.plot(data.index, data, ".", markersize=8)
+        plt.plot(data.index, data['Data'], ".", markersize=8)
     elif type == 'bars':
-        plt.bar(data.index, data)
+        plt.bar(data.index, data['Data'])
     elif type == 'cumsum':
-        plt.bar(data.index, data.cumsum())
+        plt.bar(data.index, data['Data'].cumsum())
         name = "Cumulative " + name.lower()
     elif type == 'errorbars':
-        # TODO: Maybe find more elegant way? For now, data in first, errors
-        # in second column
-        data_err = data.iloc[2]
-        plt.errorbar(data.index, data.iloc[1], yerr=data_err, fmt='o')
+        plt.errorbar(data.index, data['Data'], yerr=data['Error'], fmt='o')
     else:
         print("Unknown type parameter, using default.")
-        plt.plot(data.index, data, ".", markersize=8)
+        plt.plot(data.index, data['Data'], ".", markersize=8)
 
-    plt.ylabel(name, unit)
+    if unit:
+        plt.ylabel(name + " in " + unit)
+    else:
+        plt.ylabel(name)
     plt.grid(True)
     plt.gca().xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M"))
     fig.autofmt_xdate()
-    plt.legend()
     # Station list without the brackets
     stas_string = str(stas)[1:-1]
     if "all" in stas:
@@ -155,14 +158,16 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
         plt.title("%s data for stations: %s" % (name, stas_string))
 
     # Prepare plot title
-    title = 'Stretching, %s \n' % ",".join(components)
+    title = 'Stretching, %s, ' % ",".join(components)
+    if pairs[0] == 'all':
+        title += "Average over all pairs\n"
+    else:
+        title += "Pairs: %s\n" % str(nice_pairs)[1:-1]
     for i, filterid in enumerate(filterids):
         title += ('Filter %d (%.2f - %.2f Hz), Lag time window %.1f - %.1fs \n' % (
                   int(filterid[0:2]), lows[i], highs[i], minlags[i], endlags[i]))
-    if "all" in pairs:
-        title += "Average over all pairs"
-    else:
-        title += "Pairs: %s" % str(nice_pairs)[1:-1]
+
+    plt.suptitle(title)
 
     # Save plot output if true
     if outfile:

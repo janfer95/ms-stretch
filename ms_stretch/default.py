@@ -9,6 +9,6 @@ default['press'] = ["Enter the default station or 'all'.", 'Pressure',
 default['temp'] = ["Enter the default station or 'all'.", 'Temperature',
                    'temperature', 'all', '°C', 'points']
 default['ndvi'] = ["Enter the default station or 'all'.", 'NDVI',
-                   'ndvi', 'landmask', 'all', '', 'errorbars']
+                   'ndvi', 'landmask', '', 'errorbars']
 default['depth'] = ["Enter the default station or 'all'.", 'Sensor Depth',
                     'sensor_depth', 'TWL8', 'm', 'points']

@@ -20,13 +20,12 @@ from matplotlib.dates import DateFormatter
 from matplotlib.dates import MonthLocator
 
 from msnoise.api import *
-from ..api import get_dvv, get_filter_info, nicen_up_pairs, get_config
+from ..api import *
 
 
 def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
-         forcings=None, ask=False, type='points', show=True, outfile=None):
+         forcings=[], ask=False, show=True, outfile=None):
     db = connect()
-
     start, end, datelist = build_movstack_datelist(db)
     filterids, lows, highs, minlags, endlags = get_filter_info(filterid)
     pairs, nice_pairs = nicen_up_pairs(pairs, custom)
@@ -37,10 +36,10 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
         components = [components, ]
 
     # Plot either one forcing with dvv curve or multiple forcings
-    if len(forcings) == 1:
+    if len(forcings) <= 1:
         gs = gridspec.GridSpec(1, 1)
     else:
-        gs = gridspec.Gridspec(2,1)
+        gs = gridspec.GridSpec(2,1)
     fig = plt.figure(figsize=(12, 9))
     plt.subplots_adjust(bottom=0.06, hspace=0.3)
     first_plot = True
@@ -48,7 +47,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
     for i, filterid in enumerate(filterids):
         dflist = []
         for pair in pairs:
-            dvv_data = get_dvv(mov_stack=mov_stack, comps=comps,
+            dvv_data = get_dvv(mov_stack=mov_stack, comps=components,
                                filterid=filterid, pairs_av=pair)
             dflist.append(dvv_data)
 
@@ -60,13 +59,16 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
         # TODO: Maybe check for same filter, so that label can be shortened
         if "all" in pairs and filter_len == 1:
             tmp = dflist[0]["mean"]
+            id = tmp.index
             plt.plot(tmp.index, tmp.values, ".", markersize=11, label="mean")
             tmp = dflist[0]["median"]
             plt.plot(tmp.index, tmp.values, ".", markersize=11, label="median")
         elif "all" in pairs and filter_len > 1:
             # TODO: Maybe add option to choose mean or median
             tmp = dflist[0]["mean"]
-            label = "Filter %i, %i-%is" % (int(filter), minlags[i], endlags[i])
+            id = tmp.index
+            filter = int(filterid[0:2])
+            label = "Filter %i, %i-%is" % (filter, minlags[i], endlags[i])
             plt.plot(tmp.index, tmp.values, ".", markersize=11, label=label)
         elif "all" not in pairs and filter_len == 1:
             max_len = 0
@@ -76,7 +78,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
                 if len(tmp) > max_len:
                     max_len = len(tmp)
                     id = tmp.index
-                plt.plot(tmp.index, tmp, label=pair)
+                plt.plot(tmp.index, tmp, ".", markersize=11, label=pair)
         else:
             max_len = 0
             for df, pair in zip(dflist, nice_pairs):
@@ -86,11 +88,11 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
                     max_len = len(tmp)
                     id = tmp.index
                 label = ("Filter %i, %i-%is, %s" %
-                        (int(filter), minlags[i], endlags[i], pair))
-                plt.plot(tmp.index, tmp, label=pair)
+                        (int(filterid[0:2]), minlags[i], endlags[i], pair))
+                plt.plot(tmp.index, tmp, label=label)
 
     plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=4,
-               ncol=2, borderaxespad=0.)
+               ncol=1, borderaxespad=0.)
     plt.ylabel('dv/v (%)')
     left, right = id[0], id[-1]
     if mov_stack == 1:
@@ -105,48 +107,50 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
 
     ax2 = ax.twinx()
 
-    forcing = forcings[0]
-    if not forcing:
-        forcing = get_config(db, isref=True, name=1,
-                             value='short_name', plugin='DefaultStations')
-    dir = get_config(db, name=forcing, value='folder_name',
-                     plugin='DefaultStations')
-    name = get_config(db, name=forcing, value='forcing',
-                     plugin='DefaultStations')
-    unit = get_config(db, name=forcing, value='unit',
-                     plugin='DefaultStations')
-    type = get_config(db, name=forcing, value='plot_type',
-                     plugin='DefaultStations')
+    if not forcings:
+        forcing = get_config_p(db, isref=True, name=1,
+                               value='short_name', plugin='DefaultStations')
+    else:
+        forcing = forcings[0]
+    dir = get_config_p(db, name=forcing, value='folder_name',
+                       plugin='DefaultStations')
+    name = get_config_p(db, name=forcing, value='forcing',
+                        plugin='DefaultStations')
+    unit = get_config_p(db, name=forcing, value='unit',
+                        plugin='DefaultStations')
+    type = get_config_p(db, name=forcing, value='plot_type',
+                        plugin='DefaultStations')
 
     if ask:
         stas = ask_stations(dir)
     else:
-        stas = [get_config(db, name=forcing, value='default_station',
-                           plugin='DefaultStations')]
+        stas = [get_config_p(db, name=forcing, value='default_station',
+                             plugin='DefaultStations')]
 
     data = get_data(dir, stas)
+    data = data.loc[left:right]
 
     # TODO: Pass the color as argument?
-    color = 'tab:green'
+    color = 'tab:blue'
     # Plot configurations
     if type == 'points':
-        ax2.plot(data.index, data, ".", markersize=8, color=color)
+        ax2.plot(data.index, data["Data"], ".", markersize=8, color=color)
     elif type == 'bars':
-        ax2.bar(data.index, data, color=color)
+        ax2.bar(data.index, data["Data"], color=color)
     elif type == 'cumsum':
-        ax2.bar(data.index, data.cumsum(), color=color)
+        ax2.bar(data.index, data["Data"].cumsum(), color=color)
         name = "Cumulative " + name.lower()
     elif type == 'errorbars':
-        # TODO: Maybe find more elegant way? For now, data in first, errors
-        # in second column
-        data_err = data.iloc[1]
-        ax2.errorbar(data.index, data.iloc[0], yerr=data_err, fmt='o',
+        ax2.errorbar(data.index, data["Data"], yerr=data["Error"], fmt='o',
                      color=color)
     else:
         print("Unknown type parameter, using default.")
-        ax2.plot(data.index, data, ".", markersize=8, color=color)
+        ax2.plot(data.index, data["Data"], ".", markersize=8, color=color)
 
-    ax2.set_ylabel(name, unit)
+    if unit:
+        ax2.set_ylabel(name + " in " + unit, color=color)
+    else:
+        ax2.set_ylabel(name, color=color)
     ax2.tick_params(axis='y', labelcolor=color)
     # Forcing y-limit is maximal value plus 10% for extra space
     # TODO: Don't hardwire 10%
@@ -161,51 +165,58 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
 
         forcing = forcings[1]
         # load forcing default values
-        if not forcing:
-            forcing = get_config(db, isref=True, name=1,
-                                 value='short_name', plugin='DefaultStations')
-        dir = get_config(db, name=forcing, value='folder_name',
-                         plugin='DefaultStations')
-        name = get_config(db, name=forcing, value='forcing',
-                         plugin='DefaultStations')
-        unit = get_config(db, name=forcing, value='unit',
-                         plugin='DefaultStations')
-        type = get_config(db, name=forcing, value='plot_type',
-                         plugin='DefaultStations')
+        dir = get_config_p(db, name=forcing, value='folder_name',
+                           plugin='DefaultStations')
+        name = get_config_p(db, name=forcing, value='forcing',
+                            plugin='DefaultStations')
+        unit = get_config_p(db, name=forcing, value='unit',
+                            plugin='DefaultStations')
+        type = get_config_p(db, name=forcing, value='plot_type',
+                            plugin='DefaultStations')
 
         if ask:
             stas = ask_stations(dir)
         else:
-            stas = [get_config(db, name=forcing, value='default_station',
-                               plugin='DefaultStations')]
+            stas = [get_config_p(db, name=forcing, value='default_station',
+                                 plugin='DefaultStations')]
 
         data = get_data(dir, stas)
+        data = data.loc[left:right]
 
         # TODO: Pass the color as argument?
-        color = 'tab:orange'
+        color = 'tab:green'
         # Plot configurations
         if type == 'points':
-            ax3.plot(data.index, data, ".", markersize=8, color=color)
+            ax3.plot(data.index, data["Data"], ".", markersize=8, color=color)
         elif type == 'bars':
-            ax3.bar(data.index, data, color=color)
+            ax3.bar(data.index, data["Data"], color=color)
         elif type == 'cumsum':
-            ax3.bar(data.index, data.cumsum(), color=color)
+            ax3.bar(data.index, data["Data"].cumsum(), color=color)
             name = "Cumulative " + name.lower()
         elif type == 'errorbars':
-            # TODO: Maybe find more elegant way? For now, data in first, errors
-            # in second column
-            data_err = data.iloc[1]
-            ax3.errorbar(data.index, data.iloc[0], yerr=data_err, fmt='o',
+            ax3.errorbar(data.index, data["Data"], yerr=data["Error"], fmt='o',
                          color=color)
         else:
             print("Unknown type parameter, using default.")
-            ax3.plot(data.index, data, ".", markersize=8, color=color)
+            ax3.plot(data.index, data["Data"], ".", markersize=8, color=color)
 
-        ax3.set_ylabel(name, unit)
+        if unit:
+            ax3.set_ylabel(name + " in " + unit, color=color)
+        else:
+            ax3.set_ylabel(name, color=color)
         ax3.tick_params(axis='y', labelcolor=color)
-
+        plt.grid(True)
         plt.gca().xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M"))
         fig.autofmt_xdate()
+
+        # Station list without the brackets
+        stas_string = str(stas)[1:-1]
+        if "all" in stas:
+            subtitle = "%s data for all the stations" % name
+        elif len(stas) == 1:
+            subtitle = "%s data for station: %s" % (name, stas_string)
+        else:
+            subtitle = "%s data for stations: %s" % (name, stas_string)
 
         # For the case of two subplots with two y-axes
         if len(forcings) == 3:
@@ -214,63 +225,73 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
 
             forcing = forcings[2]
             # load forcing default values
-            if not forcing:
-                forcing = get_config(db, isref=True, name=1, value='short_name',
-                                     plugin='DefaultStations')
-            dir = get_config(db, name=forcing, value='folder_name',
-                             plugin='DefaultStations')
-            name = get_config(db, name=forcing, value='forcing',
-                             plugin='DefaultStations')
-            unit = get_config(db, name=forcing, value='unit',
-                             plugin='DefaultStations')
-            type = get_config(db, name=forcing, value='plot_type',
-                             plugin='DefaultStations')
+            dir = get_config_p(db, name=forcing, value='folder_name',
+                               plugin='DefaultStations')
+            name = get_config_p(db, name=forcing, value='forcing',
+                                plugin='DefaultStations')
+            unit = get_config_p(db, name=forcing, value='unit',
+                                plugin='DefaultStations')
+            type = get_config_p(db, name=forcing, value='plot_type',
+                                plugin='DefaultStations')
 
             if ask:
                 stas = ask_stations(dir)
             else:
-                stas = [get_config(db, name=forcing, value='default_station',
-                                   plugin='DefaultStations')]
+                stas = [get_config_p(db, name=forcing, value='default_station',
+                                     plugin='DefaultStations')]
 
             data = get_data(dir, stas)
+            data = data.loc[left:right]
 
             # TODO: Pass the color as argument?
-            color = 'tab:orange'
+            color = 'tab:red'
             # Plot configurations
             if type == 'points':
-                ax4.plot(data.index, data, ".", markersize=8, color=color)
+                ax4.plot(data.index, data["Data"], ".", markersize=8, color=color)
             elif type == 'bars':
-                ax4.bar(data.index, data, color=color)
+                ax4.bar(data.index, data["Data"], color=color)
             elif type == 'cumsum':
-                ax4.bar(data.index, data.cumsum(), color=color)
+                ax4.bar(data.index, data["Data"].cumsum(), color=color)
                 name = "Cumulative " + name.lower()
             elif type == 'errorbars':
-                # TODO: Maybe find more elegant way? For now, data in first, errors
-                # in second column
-                data_err = data.iloc[1]
-                ax4.errorbar(data.index, data.iloc[0], yerr=data_err, fmt='o',
+                ax4.errorbar(data.index, data["Data"], yerr=data["Error"], fmt='o',
                              color=color)
             else:
                 print("Unknown type parameter, using default.")
-                ax4.plot(data.index, data, ".", markersize=8, color=color)
+                ax4.plot(data.index, data["Data"], ".", markersize=8, color=color)
 
-            ax4.set_ylabel(name, unit)
+            if unit:
+                ax4.set_ylabel(name + " in " + unit, color=color)
+            else:
+                ax4.set_ylabel(name, color=color)
             ax4.tick_params(axis='y', labelcolor=color)
             # Forcing y-limit is maximal value plus 10% for extra space
             # TODO: Don't hardwire 10%
             max_val = data.loc[left:right].values.max()
             ax4.set_ylim(0, max_val*1.1)
+            plt.gca().xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M"))
+            fig.autofmt_xdate()
+
+            # Station list without the brackets
+            stas_string = str(stas)[1:-1]
+            if "all" in stas:
+                subtitle += "\n%s data for all the stations" % name
+            elif len(stas) == 1:
+                subtitle += "\n%s data for station: %s" % (name, stas_string)
+            else:
+                subtitle += "\n%s data for stations: %s" % (name, stas_string)
+        plt.title(subtitle)
 
 
     # Prepare plot title
-    title = 'Stretching, %s \n' % ",".join(components)
+    title = 'Stretching, %s, ' % ",".join(components)
+    if pairs[0] == 'all':
+        title += "Average over all pairs\n"
+    else:
+        title += "Pairs: %s\n" % str(nice_pairs)[1:-1]
     for i, filterid in enumerate(filterids):
         title += ('Filter %d (%.2f - %.2f Hz), Lag time window %.1f - %.1fs \n' % (
                   int(filterid[0:2]), lows[i], highs[i], minlags[i], endlags[i]))
-    if "all" in pairs:
-        title += "Average over all pairs"
-    else:
-        title += "Pairs: %s" % str(nice_pairs)[1:-1]
 
     plt.suptitle(title)
 

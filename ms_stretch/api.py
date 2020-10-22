@@ -20,12 +20,16 @@ def ask_stations(dir):
     """
 
     stas = []
-
+    print("--------------------------------------------")
     print("Choose any number of stations to be included.")
     print("Type in the name without the '.csv' ending.")
-    os.system("ls %s" % forcing)
+    print("Available stations:")
+    print("\n")
+    os.system("ls %s" % dir)
+    print("\n")
     print("You can also choose 'all'. End the list ")
     print("with hitting Enter without entering a station.")
+    print("--------------------------------------------")
     i = 1
     while(1):
         sta = input("%i. Station: " % i)
@@ -86,26 +90,28 @@ def get_data(dir, stas):
     """
 
     if 'all' in stas:
-        file_list = glob.glob("/%s/*.csv" % dir)
+        file_list = glob.glob("%s/*.csv" % dir)
     else:
         file_list = []
         for sta in stas:
             path = os.path.join(dir, sta + ".csv")
+            file_list.append(path)
 
+    print("Getting data in %s directory." % dir)
+    print("Stations: %s" % str(stas)[1:-1])
     first = True
     for file in file_list:
         try:
-            data_med = pd.read_csv(file, index_col=0, parse_dates=True,
-                               header=None)
+            data_med = pd.read_csv(file, index_col=0, parse_dates=True)
         except:
             print("{} was not found".format(path))
             data_med = None
 
-            # The first file can't be concatenated with anything
-            if first:
-                data = data_med
-                continue
-            data = pd.concat([data, data_med])
+        # The first file can't be concatenated with anything
+        if first:
+            data = data_med
+            continue
+        data = pd.concat([data, data_med])
 
     # Average if there are multiple values for one day
     data = data.groupby('Date').mean()
@@ -147,10 +153,10 @@ def get_dvv(mov_stack=10, comps="ZZ", filterid="1", pairs_av=None):
 
     db = connect()
     # Treat components and pairs input
-    if pairs:
-        pairs = pairs.split(",")
+    if pairs_av:
+        pairs_av = pairs_av.split(",")
     else:
-        pairs = ["all"]
+        pairs_av = ["all"]
 
     # Accepts also string divided by commas
     if type(comps) is not list:
@@ -168,13 +174,13 @@ def get_dvv(mov_stack=10, comps="ZZ", filterid="1", pairs_av=None):
 
     # Average over certain pairs or over all
     # Usually only one pair or all are used
-    for pair in pairs:
+    for pair in pairs_av:
         first = True
         for comp in comps:
             filedir = os.path.join("STR","%s" % filterid,
                                "%03i_DAYS" % mov_stack, comp)
             #Either get all stations or only selected pairs
-            if "all" in pairs:
+            if "all" in pairs_av:
                 listfiles = os.listdir(path=filedir)
             else:
                 file = pair + ".csv"
@@ -246,10 +252,10 @@ def get_dvv_mat(mov_stack=10, comps="ZZ", filterid="1", pairs_av=None):
 
     db = connect()
     #Treat components and pairs input
-    if pairs:
-        pairs = pairs.split(",")
+    if pairs_av:
+        pairs_av = pairs_av.split(",")
     else:
-        pairs = ["all"]
+        pairs_av = ["all"]
 
     # Accepts also string divided by commas
     if type(comps) is not list:
@@ -265,13 +271,13 @@ def get_dvv_mat(mov_stack=10, comps="ZZ", filterid="1", pairs_av=None):
     else:
         filterid = "0" + filterid
 
-    for pair in pairs:
+    for pair in pairs_av:
         first = True
         for comp in comps:
             filedir = os.path.join("STR_Mat","%s" % filterid,
                                "%03i_DAYS" % mov_stack, comp)
             #Either get all stations or only selected pairs
-            if "all" in pairs:
+            if "all" in pairs_av:
                 listfiles = os.listdir(path=filedir)
             else:
                 file = pair + ".csv"
@@ -335,10 +341,10 @@ def get_corr(mov_stack=10, comps="ZZ", filterid="1", pairs_av=None):
 
     db = connect()
     # Treat components and pairs input
-    if pairs:
-        pairs = pairs.split(",")
+    if pairs_av:
+        pairs_av = pairs_av.split(",")
     else:
-        pairs = ["all"]
+        pairs_av = ["all"]
 
     # Accepts also string divided by commas
     if type(comps) is not list:
@@ -356,13 +362,13 @@ def get_corr(mov_stack=10, comps="ZZ", filterid="1", pairs_av=None):
 
     # Average over certain pairs or over all
     # Usually only one pair or all are used
-    for pair in pairs:
+    for pair in pairs_av:
         first = True
         for comp in comps:
             filedir = os.path.join("STR","%s" % filterid,
                                "%03i_DAYS" % mov_stack, comp)
             #Either get all stations or only selected pairs
-            if "all" in pairs:
+            if "all" in pairs_av:
                 listfiles = os.listdir(path=filedir)
             else:
                 file = pair + ".csv"
@@ -458,9 +464,10 @@ def get_filter_info(filterid):
     return filterids, lows, highs, minlags, endlags
 
 
-def get_config(session, isref=False, name=None, value=None,
-               isbool=False, plugin=None):
-    """Get the value of one or all config bits from the database.
+def get_config_p(session, isref=False, name=None, value=None,
+                 isbool=False, plugin=None):
+    """Get the value of one or all config bits from plugins from the database.
+    A more specified version of the MSNoise get_config function
 
     :type isref: bool
     :param isref: if True, values can be accessed by the reference number
@@ -533,7 +540,8 @@ def nicen_up_pairs(pairs, custom=False):
         nice_pairs = ["all"]
     elif custom:
         nice_pairs = []
-        df = pd.read_csv("change_pairs.csv", index_col=0, header=None)
+        df = pd.read_csv("change_pairs.csv", header=None)
+        df.fillna('', inplace=True)
         for pair in pairs:
             for i in range(len(df)):
                 val = df.iloc[i,0]
@@ -548,8 +556,8 @@ def nicen_up_pairs(pairs, custom=False):
         for pair in pairs:
             # Change underscores to dots
             new_pair = pair.replace("_", ".", 1)
-            new_pair = new_pair.reverse().replace("_", ".", 1)
-            new_pair = new_pair.replace("_", " ")
+            new_pair = new_pair[::-1].replace("_", ".", 1)
+            new_pair = new_pair[::-1]
             nice_pairs.append(new_pair)
 
     return pairs, nice_pairs

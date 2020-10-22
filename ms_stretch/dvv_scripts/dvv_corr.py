@@ -24,7 +24,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
     db = connect()
 
     start, end, datelist = build_movstack_datelist(db)
-    filterids, lows, highs, minlags, endlags = get_filter_info(filterid)
+    filterids, lows, highs, minlags, endlags = get_filter_info([filterid])
     # Since there is only one filter:
     filterid, low, high = filterids[0], lows[0], highs[0]
     minlag, endlag = minlags[0], endlags[0]
@@ -83,13 +83,13 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
         col1 = ((df_med.mean(axis=1)-1)*100).values
         col2 = ((df_med.median(axis=1)-1)*100).values
         data = {"mean": col1, "median": col2}
-        dvv_data = pd.DataFrame(data, index=df.index)
+        dvv_data = pd.DataFrame(data, index=df_med.index)
 
         df_corr.sort_values(by=['Date'])
-        col1 = df.mean(axis=1).values
-        col2 = df.median(axis=1).values
+        col1 = df_corr.mean(axis=1).values
+        col2 = df_corr.median(axis=1).values
         data = {"mean": col1, "median": col2}
-        corr_data = pd.DataFrame(data, index=df.index)
+        corr_data = pd.DataFrame(data, index=df_corr.index)
 
         dflist.append(dvv_data)
         dflist_corr.append(corr_data)
@@ -100,6 +100,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
 
     if "all" in pairs:
         tmp = dflist[0]["mean"]
+        id = tmp.index
         plt.plot(tmp.index, tmp.values, ".", markersize=11, label="mean")
         tmp = dflist[0]["median"]
         plt.plot(tmp.index, tmp.values, ".", markersize=11, label="median")
@@ -111,7 +112,7 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
             if len(tmp) > max_len:
                 max_len = len(tmp)
                 id = tmp.index
-            plt.plot(tmp.index, tmp, label=pair)
+            plt.plot(tmp.index, tmp, ".", markersize=11, label=pair)
 
     # Coordinate labels and grids
     left, right = id[0], id[-1]
@@ -126,48 +127,46 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
     else:
         plt.title('%i Days Smoothing' % mov_stack)
     plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=4,
-               ncol=2, borderaxespad=0.)
+               ncol=1, borderaxespad=0.)
 
     #Plot correlation as subplot
     plt.subplot(gs[1], sharex=ax)
     plt.title("Correlation coefficients for the stretching method ")
-    print(df_corr)
+    print("Correlation Coefficients:")
+    print(corr_data)
     if "all" in pairs:
         tmp = dflist_corr[0]["mean"]
-        plt.plot(tmp.index, tmp.values, ".", markersize=11, label="mean")
+        plt.plot(tmp.index, tmp.values, ".", markersize=8, label="mean")
         tmp = dflist_corr[0]["median"]
-        plt.plot(tmp.index, tmp.values, ".", markersize=11, label="median")
+        plt.plot(tmp.index, tmp.values, ".", markersize=8, label="median")
     else:
         max_len = 0
         for df, pair in zip(dflist_corr, nice_pairs):
             tmp = df["mean"]
-            #Find out longest time series to plot
-            if len(tmp) > max_len:
-                max_len = len(tmp)
-                id = tmp.index
-            plt.plot(tmp.index, tmp, label=pair)
+            plt.plot(tmp.index, tmp, ".", markersize=8, label=pair)
     #plt.plot(tmp2.index, df_corr.loc[tmp2.index].values)
     plt.ylabel('Correlation coefficient')
     plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=4,
-               ncol=2, borderaxespad=0.)
+               ncol=1, borderaxespad=0.)
     plt.grid(True)
     plt.gca().xaxis.set_major_formatter(DateFormatter("%Y-%m-%d %H:%M"))
     fig.autofmt_xdate()
     if "all" in pairs:
+        title = ('Stretching, %s, Filter %d (%.2f - %.2f Hz), '
+                 'Lag time window %.1f - %.1fs') % \
+                   (",".join(components), int(filterid[0:2]), low,
+                    high, minlag, endlag) \
+                + "\nAverage over all available pairs"
+    else:
         #Prepare station strings
         stations = str(nice_pairs)[1:-1]
         title = ('Stretching, %s, Filter %d (%.2f - %.2f Hz), '
                  'Lag time window %.1f - %.1fs') % \
                    (",".join(components), int(filterid[0:2]), low,
                     high, minlag, endlag) \
-                + "\n Stations: %s" % stations
-    else:
-        title = ('Stretching, %s, Filter %d (%.2f - %.2f Hz), '
-                 'Lag time window %.1f - %.1fs') % \
-                   (",".join(components), int(filterid[0:2]), low,
-                    high, minlag, endlag) \
-                + "\n Average over all available stations"
+                + "\n Pairs: %s" % stations
     plt.suptitle(title)
+
     if outfile:
         if outfile.startswith("?"):
             if len(mov_stacks) == 1:

@@ -51,7 +51,7 @@ def forcing(mov_stack, components, filterid, pairs, custom, forcing, ask,
 @click.option('-p', '--pairs', default=None, help='Plot (a) specific pair(s)',
               multiple=True)
 @click.option('-C', '--custom', default=False, help='Customize pair names.')
-@click.option('-F', '--forcings', default=None, help='Choose forcings to '
+@click.option('-F', '--forcings', default=[], help='Choose forcings to '
               'display.', multiple=True)
 @click.option('-a', '--ask', default=False, help='Ask which station to use \
               for plotting natural forcings. Else default station is used.')
@@ -95,7 +95,7 @@ def dvv(mov_stack, components, filterid, pairs, custom, show, outfile):
 
 
 @click.command()
-@click.option('-m', '--mov_stack', default=0, help='Plot specific mov stacks')
+@click.option('-m', '--mov_stack', default=10, help='Plot specific mov stacks')
 @click.option('-c', '--components', default="ZZ", help='Components (ZZ, ZR,...)')
 @click.option('-f', '--filterid', default='1', help='Filter ID')
 @click.option('-p', '--pairs', default=None, help='Plot (a) specific pair(s)',

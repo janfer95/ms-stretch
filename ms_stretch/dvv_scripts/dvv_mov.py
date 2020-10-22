@@ -16,7 +16,7 @@ from matplotlib.dates import DateFormatter
 from matplotlib.dates import MonthLocator
 
 from msnoise.api import *
-from ..api import get_dvv, get_filter_info, nicen_up_pairs, get_config
+from ..api import get_dvv, get_filter_info, nicen_up_pairs
 
 
 
@@ -64,19 +64,20 @@ def main(mov_stack=None, components='ZZ', filterid='1', pairs=None, custom=False
                 first_plot = False
 
             # TODO: Maybe check for same filter, so that label can be shortened
-            if pairs[0] == "all" and filter_len == 1:
+            if "all" in pairs and filter_len == 1:
                 tmp = dflist[0]["mean"]
                 id = tmp.index
                 plt.plot(tmp.index, tmp.values, ".", markersize=11, label="mean")
                 tmp = dflist[0]["median"]
                 plt.plot(tmp.index, tmp.values, ".", markersize=11, label="median")
-            elif pairs[0] == "all" and filter_len > 1:
+            elif "all" in pairs and filter_len > 1:
                 # TODO: Maybe add option to choose mean or median
                 tmp = dflist[0]["mean"]
                 id = tmp.index
-                label = "Filter %i, %i-%is" % (int(filter), minlags[j], endlags[j])
+                filter = int(filterid[0:2])
+                label = "Filter %i, %i-%is" % (filter, minlags[j], endlags[j])
                 plt.plot(tmp.index, tmp.values, ".", markersize=11, label=label)
-            elif pairs[0] != "all" and filter_len == 1:
+            elif "all" not in pairs and filter_len == 1:
                 max_len = 0
                 for df, pair in zip(dflist, nice_pairs):
                     tmp = df["mean"]
@@ -84,7 +85,7 @@ def main(mov_stack=None, components='ZZ', filterid='1', pairs=None, custom=False
                     if len(tmp) > max_len:
                         max_len = len(tmp)
                         id = tmp.index
-                    plt.plot(tmp.index, tmp, label=pair)
+                    plt.plot(tmp.index, tmp, ".", markersize=11, label=pair)
             else:
                 max_len = 0
                 for df, pair in zip(dflist, nice_pairs):
@@ -94,8 +95,8 @@ def main(mov_stack=None, components='ZZ', filterid='1', pairs=None, custom=False
                         max_len = len(tmp)
                         id = tmp.index
                     label = ("Filter %i, %i-%is, %s" %
-                            (int(filter), minlags[j], endlags[j], pair))
-                    plt.plot(tmp.index, tmp, label=pair)
+                            (int(filterid[0:2]), minlags[j], endlags[j], pair))
+                    plt.plot(tmp.index, tmp, ".", markersize=11, label=label)
 
         # Coordinate labels and grids
         left, right = id[0], id[-1]
@@ -110,18 +111,19 @@ def main(mov_stack=None, components='ZZ', filterid='1', pairs=None, custom=False
         else:
             plt.title('%i Days Smoothing' % mov_stack)
         plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=4,
-                   ncol=2, borderaxespad=0.)
+                   ncol=1, borderaxespad=0.)
 
     # Prepare plot title
-    title = 'Stretching, %s \n' % ",".join(components)
+    title = 'Stretching, %s, ' % ",".join(components)
+    if pairs[0] == 'all':
+        title += "Average over all pairs\n"
+    else:
+        title += "Pairs: %s\n" % str(nice_pairs)[1:-1]
     for i, filterid in enumerate(filterids):
         title += ('Filter %d (%.2f - %.2f Hz), Lag time window %.1f - %.1fs \n' % (
                   int(filterid[0:2]), lows[i], highs[i], minlags[i], endlags[i]))
-    if pairs[0] == 'all':
-        title += "Average over all pairs"
-    else:
-        title += "Pairs: %s" % str(nice_pairs)[1:-1]
 
+    plt.suptitle(title)
 
     if outfile:
         if outfile.startswith("?"):
