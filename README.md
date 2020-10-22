@@ -20,9 +20,9 @@ For questions, comments and bugs please contact jfkuehn@gfz-potsdam.de.
 
 ## Installation
 * Follow the MSNoise installation instructions ([here](http://msnoise.org/doc/installation.html))
-* Install ms-stretch. One way to do it is to copy it into the folder where 
-msnoise and other python packages are saved, type ``cd ms-stretch`` and then 
-run ``python setup.py install``. 
+* Install ms-stretch. One way to do it is to copy it into the folder where
+msnoise and other python packages are saved, type ``cd ms-stretch`` and then
+run ``python setup.py install``.
 
 ## Running ms-stretch
 
@@ -57,7 +57,7 @@ some STR data, but still want to have plots with various LTW then you can
 change the folder names of the filters from e.g. ``STR/01`` to ``STR/01_2_4``
 or similar. Naturally, you have to remember in which LTW you computed the data.
 
-Another option is to run the command ``msnoise p compute_stretching``. A script
+Another option is to run the command ``msnoise p compute stretching``. A script
 is executed that is identical to the original MSNoise one with the only
 difference that the output folder is changed to the format mentioned above, i.e.
 ``STR/filterid_startlag_endlag``. This also has the (nice) side effect that if
@@ -84,6 +84,21 @@ different LTW are possible.
 
 * ``msnoise p plot mforcing -f 1`` is the same as the command before only
 that multiple forcings are possible. Check out the ([examples]()) to get an idea.
+
+
+project_folder
+├── db.ini
+├── ... other data
+├── precipitation
+    ├── Station1.csv
+    └── Station2.csv
+├── temperature
+    ├── mymeasurements.csv
+    └── whyisitsohotinhere.csv
+└── STR
+    ├── 01
+    ├── 02_1_2
+    └── 02_2_4
 
 
 *Note: In the column Default Station 'all' can be passed and this takes the
@@ -116,4 +131,4 @@ Some further modifications are planned for this plugin including:
 
 * corresponding plots
 
-* computing and plotting Signal-to-Noise ratios 
+* computing and plotting Signal-to-Noise ratios

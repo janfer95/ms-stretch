@@ -16,7 +16,7 @@ from matplotlib.dates import DateFormatter
 from matplotlib.dates import MonthLocator
 
 from msnoise.api import *
-from ..datautilities import get_dvv, get_filter_info, nicen_up_pairs
+from ..api import get_dvv, get_filter_info, nicen_up_pairs, get_config
 
 
 

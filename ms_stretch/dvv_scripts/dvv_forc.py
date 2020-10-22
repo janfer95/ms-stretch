@@ -16,11 +16,11 @@ from matplotlib.dates import DateFormatter
 from matplotlib.dates import MonthLocator
 
 from msnoise.api import *
-from ..datautilities import get_dvv, get_filter_info, nicen_up_pairs
+from ..api import get_dvv, get_filter_info, nicen_up_pairs, get_config
 
 
 def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
-         forcing='prec', ask=False, show=True, outfile=None):
+         forcing=None, ask=False, show=True, outfile=None):
 
     db = connect()
 
@@ -102,22 +102,26 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
     # Plot forcing
     plt.subplot(gs[1], sharex=ax)
 
-    # load forcing default values
-    defaults = pd.read_csv("defaults.csv", header=1, index_col=1)
-    dir = defaults.at[forcing, 'folder_name']
-    name = defaults.at[forcing, 'forcing']
-    unit = defaults.at[forcing, 'unit']
-    type = defaults.at[forcing, 'plot_type']
+    # load forcing default values, get first one in list if None is passed
+    if not forcing:
+        forcing = get_config(db, isref=True, name=1,
+                             value='short_name', plugin='DefaultStations')
+    dir = get_config(db, name=forcing, value='folder_name',
+                     plugin='DefaultStations')
+    name = get_config(db, name=forcing, value='forcing',
+                     plugin='DefaultStations')
+    unit = get_config(db, name=forcing, value='unit',
+                     plugin='DefaultStations')
+    type = get_config(db, name=forcing, value='plot_type',
+                     plugin='DefaultStations')
 
     if ask:
         stas = ask_stations(dir)
     else:
-        stas = [defaults.at[forcing, 'default_station']]
+        stas = [get_config(db, name=forcing, value='default_station',
+                           plugin='DefaultStations')]
 
-    if forcing == 'PGV':
-        data = get_pgv()
-    else:
-        data = get_data(dir, stas)
+   data = get_data(dir, stas)
 
     # Plot configurations
     if type == 'points':

@@ -20,11 +20,11 @@ from matplotlib.dates import DateFormatter
 from matplotlib.dates import MonthLocator
 
 from msnoise.api import *
-from ..datautilities import get_dvv, get_filter_info, nicen_up_pairs
+from ..api import get_dvv, get_filter_info, nicen_up_pairs, get_config
 
 
 def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
-         forcings=['prec'], ask=False, type='points', show=True, outfile=None):
+         forcings=None, ask=False, type='points', show=True, outfile=None):
     db = connect()
 
     start, end, datelist = build_movstack_datelist(db)
@@ -106,23 +106,25 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
     ax2 = ax.twinx()
 
     forcing = forcings[0]
-    # load forcing default values
-    defaults = pd.read_csv("defaults.csv", header=1, index_col=1)
-    dir = defaults.at[forcing, 'folder_name']
-    name = defaults.at[forcing, 'forcing']
-    unit = defaults.at[forcing, 'unit']
-    type = defaults.at[forcing, 'plot_type']
+    if not forcing:
+        forcing = get_config(db, isref=True, name=1,
+                             value='short_name', plugin='DefaultStations')
+    dir = get_config(db, name=forcing, value='folder_name',
+                     plugin='DefaultStations')
+    name = get_config(db, name=forcing, value='forcing',
+                     plugin='DefaultStations')
+    unit = get_config(db, name=forcing, value='unit',
+                     plugin='DefaultStations')
+    type = get_config(db, name=forcing, value='plot_type',
+                     plugin='DefaultStations')
 
     if ask:
         stas = ask_stations(dir)
     else:
-        stas = [defaults.at[forcing, 'default_station']]
+        stas = [get_config(db, name=forcing, value='default_station',
+                           plugin='DefaultStations')]
 
-    if forcing == 'PGV':
-        data = get_pgv()
-    else:
-        data = get_data(dir, stas)
-
+    data = get_data(dir, stas)
 
     # TODO: Pass the color as argument?
     color = 'tab:green'
@@ -159,21 +161,25 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
 
         forcing = forcings[1]
         # load forcing default values
-        defaults = pd.read_csv("defaults.csv", header=1, index_col=1)
-        dir = defaults.at[forcing, 'folder_name']
-        name = defaults.at[forcing, 'forcing']
-        unit = defaults.at[forcing, 'unit']
-        type = defaults.at[forcing, 'plot_type']
+        if not forcing:
+            forcing = get_config(db, isref=True, name=1,
+                                 value='short_name', plugin='DefaultStations')
+        dir = get_config(db, name=forcing, value='folder_name',
+                         plugin='DefaultStations')
+        name = get_config(db, name=forcing, value='forcing',
+                         plugin='DefaultStations')
+        unit = get_config(db, name=forcing, value='unit',
+                         plugin='DefaultStations')
+        type = get_config(db, name=forcing, value='plot_type',
+                         plugin='DefaultStations')
 
         if ask:
             stas = ask_stations(dir)
         else:
-            stas = [defaults.at[forcing, 'default_station']]
+            stas = [get_config(db, name=forcing, value='default_station',
+                               plugin='DefaultStations')]
 
-        if forcing == 'PGV':
-            data = get_pgv()
-        else:
-            data = get_data(dir, stas)
+        data = get_data(dir, stas)
 
         # TODO: Pass the color as argument?
         color = 'tab:orange'
@@ -208,21 +214,25 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
 
             forcing = forcings[2]
             # load forcing default values
-            defaults = pd.read_csv("defaults.csv", header=1, index_col=1)
-            dir = defaults.at[forcing, 'folder_name']
-            name = defaults.at[forcing, 'forcing']
-            unit = defaults.at[forcing, 'unit']
-            type = defaults.at[forcing, 'plot_type']
+            if not forcing:
+                forcing = get_config(db, isref=True, name=1, value='short_name',
+                                     plugin='DefaultStations')
+            dir = get_config(db, name=forcing, value='folder_name',
+                             plugin='DefaultStations')
+            name = get_config(db, name=forcing, value='forcing',
+                             plugin='DefaultStations')
+            unit = get_config(db, name=forcing, value='unit',
+                             plugin='DefaultStations')
+            type = get_config(db, name=forcing, value='plot_type',
+                             plugin='DefaultStations')
 
             if ask:
                 stas = ask_stations(dir)
             else:
-                stas = [defaults.at[forcing, 'default_station']]
+                stas = [get_config(db, name=forcing, value='default_station',
+                                   plugin='DefaultStations')]
 
-            if forcing == 'PGV':
-                data = get_pgv()
-            else:
-                data = get_data(dir, stas)
+            data = get_data(dir, stas)
 
             # TODO: Pass the color as argument?
             color = 'tab:orange'

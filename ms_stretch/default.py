@@ -12,5 +12,3 @@ default['ndvi'] = ["Enter the default station or 'all'.", 'NDVI',
                    'ndvi', 'landmask', 'all', '', 'errorbars']
 default['depth'] = ["Enter the default station or 'all'.", 'Sensor Depth',
                     'sensor_depth', 'TWL8', 'm', 'points']
-default['pgv'] = ["Enter the default station or 'all'.", 'Peak-Ground-Velocity',
-                  'pgv', 'all', 'm/s', 'points']

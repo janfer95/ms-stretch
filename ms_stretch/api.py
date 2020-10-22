@@ -458,6 +458,52 @@ def get_filter_info(filterid):
     return filterids, lows, highs, minlags, endlags
 
 
+def get_config(session, isref=False, name=None, value=None,
+               isbool=False, plugin=None):
+    """Get the value of one or all config bits from the database.
+
+    :type isref: bool
+    :param isref: if True, values can be accessed by the reference number
+    :type session: :class:`sqlalchemy.orm.session.Session`
+    :param session: A :class:`~sqlalchemy.orm.session.Session` object, as
+        obtained by :func:`connect`
+    :type name: str
+    :param name: The name of the config bit to get. If isref, the reference
+                 number can be used instead of the short name
+    :type isbool: bool
+    :param isbool: if True, returns True/False for config `name`. Defaults to
+        False
+    :type plugin: str
+    :param plugin: Gives the name of the Plugin config to use. E.g.
+        if "Amazing" is provided, MSNoise will try to load the "AmazingConfig"
+        entry point. See :doc:`plugins` for details.
+
+    :rtype: str or bool
+    :returns: the value for `name`
+    """
+    for ep in pkg_resources.iter_entry_points(
+            group='msnoise.plugins.table_def'):
+        if ep.name.replace("Config", "") == plugin:
+            table = ep.load()
+
+    if isref:
+        config = session.query(table).filter(table.ref == name).first()
+    else:
+        config = session.query(table).filter(table.short_name == name).first()
+    if config is not None:
+        if isbool:
+            if config.value in [True, 'True', 'true', 'Y', 'y', '1', 1]:
+                config = True
+            else:
+                config = False
+        else:
+            config = getattr(config, value)
+    else:
+        config = ''
+
+    return config
+
+
 def nicen_up_pairs(pairs, custom=False):
     """
     If no pairs are passed, all is returned to signal that
