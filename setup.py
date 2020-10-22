@@ -23,6 +23,6 @@ setup(
     description = "An msnoise plugin to plot dvv curves using the \
                    stretching method",
     license = "EUPL-1.1",
-    url = "https://github.com/janfer95/ms_stretch",
-    keywords="ambient seismic noise stretching"
+    url = "https://github.com/janfer95/ms-stretch",
+    keywords="ambient seismic noise monitoring stretching"
 )

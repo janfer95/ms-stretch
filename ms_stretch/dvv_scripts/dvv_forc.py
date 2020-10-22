@@ -23,7 +23,6 @@ def main(mov_stack=10, components='ZZ', filterid='1', pairs=None, custom=False,
          forcing=None, ask=False, show=True, outfile=None):
 
     db = connect()
-    print(show)
     start, end, datelist = build_movstack_datelist(db)
     filterids, lows, highs, minlags, endlags = get_filter_info(filterid)
     pairs, nice_pairs = nicen_up_pairs(pairs, custom)

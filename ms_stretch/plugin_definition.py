@@ -199,5 +199,5 @@ class DefaultStationsView(ModelView):
         super(DefaultStationsView, self).__init__(DefaultStations, session,
                                                   endpoint="defaultstations",
                                                   name="Default Stations",
-                                                  category="Configuration",
+                                                  category="Stretch",
                                                   **kwargs)
