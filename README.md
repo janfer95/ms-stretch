@@ -31,11 +31,10 @@ parameter in the web admin. Alternatively ``msnoise config set plugins=ms_stretc
 works too. Note in both cases that an underscore is needed, not a dash.
 
 To just plot the stretching data in the typical MSNoise fashion with all
-the defaults simply type: ``msnoise p stretch plot dvv -f 1``.
-In contrast to the ``msnoise plot dvv`` command the explicit declaration of
-the filter is highly recommended. Reason for this is that the plugin command also
-supports plotting of multiple filters and different lag time windows (LTW)
-within the same filter.
+the defaults simply type: ``msnoise p stretch plot dvv``. This command
+can also plot (multiple) pairs and I tried to keep it as close to the
+original ``msnoise plot dvv`` command as possible.
+
 
 ### Plotting multiple filters
 
@@ -43,10 +42,9 @@ While working with the stretching method one often tries out different lag
 time windows for the same filters. To better compare this results they can be
 plotted together by simply calling the filter argument multiple times.
 
-* ``msnoise p stretch plot dvv -f 1 -f 2`` plots the dvv curves corresponding to
-the two filters with otherwise default values.
+* ``msnoise p stretch plot ndvv -f 1 -f 2`` plots the dvv curves corresponding to the two filters with otherwise default values (ndvv stands for new dvv).
 
-* ``msnoise p stretch plot dvv -f 1_2_4 -f 1_4_8`` plots two dvv curves corresponding
+* ``msnoise p stretch plot ndvv -f 1_2_4 -f 1_4_8`` plots two dvv curves corresponding
 to the same filter, BUT for different LTW. In this case, 2s-4s and 4s-8s.
 
 ### Setting up LTW data
@@ -118,7 +116,7 @@ Some further modifications are planned for this plugin including:
 
 * computing and plotting Signal-to-Noise ratios
 
-## Citing MSNoise 
+## Citing MSNoise
 
 In the spirit of the MSNoise documentation:
 If you use MSNoise, even a small part of it, for your research and publications, please consider citing it:

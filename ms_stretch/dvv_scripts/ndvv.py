@@ -5,7 +5,7 @@ Plot velocity curves obtained by the stretching method in
 the standard msnoise way. Multiple filters are possible.
 Example:
 
-``msnoise plugin plot dvv`` will plot all defaults.
+``msnoise p stretch plot ndvv`` will plot all defaults.
 
 """
 
@@ -24,7 +24,6 @@ def main(mov_stack=None, components='ZZ', filterid='1', pairs=None, custom=False
          show=False, outfile=None):
 
     db = connect()
-
     start, end, datelist = build_movstack_datelist(db)
     filterids, lows, highs, minlags, endlags = get_filter_info(filterid)
     pairs, nice_pairs = nicen_up_pairs(pairs, custom)
@@ -47,9 +46,8 @@ def main(mov_stack=None, components='ZZ', filterid='1', pairs=None, custom=False
     fig = plt.figure(figsize=(12, 9))
     plt.subplots_adjust(bottom=0.06, hspace=0.3)
 
-
+    first_plot = True
     for i, mov_stack in enumerate(mov_stacks):
-        first_plot = True
         filter_len = len(filterids)
         for j, filterid in enumerate(filterids):
             dflist = []
@@ -59,9 +57,11 @@ def main(mov_stack=None, components='ZZ', filterid='1', pairs=None, custom=False
                 dflist.append(dvv_data)
 
             # Plot dvv mean and median or multiple dvv
-            if first_plot:
+            if first_plot == 1:
                 ax = plt.subplot(gs[i])
                 first_plot = False
+            else:
+                plt.subplot(gs[i], sharex=ax)
 
             # TODO: Maybe check for same filter, so that label can be shortened
             if "all" in pairs and filter_len == 1:

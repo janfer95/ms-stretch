@@ -158,19 +158,6 @@ def get_dvv(mov_stack=10, comps="ZZ", filterid="1", pairs_av=None):
     else:
         pairs_av = ["all"]
 
-    # Accepts also string divided by commas
-    if type(comps) is not list:
-        if len(comps) == 1:
-            comps = [comps]
-        else:
-            comps = comps.split(",")
-
-    # Norm the filterid, add a 0 when needed
-    idx = filterid.find("_")
-    if len(filterid[:idx]) == 2:
-        pass
-    else:
-        filterid = "0" + filterid
 
     # Average over certain pairs or over all
     # Usually only one pair or all are used

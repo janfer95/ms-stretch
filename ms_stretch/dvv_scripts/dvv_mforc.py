@@ -8,7 +8,7 @@ are displayed in a subplot.
 
 Example:
 
-``msnoise plugin plot mforcing -f 1_2_4`` will plot a dvv curve with all defaults,
+``msnoise p stretch plot mforcing -f 1_2_4`` will plot a dvv curve with all defaults,
 where filter 1 was used and the stretching window was 2s-4s.
 
 """

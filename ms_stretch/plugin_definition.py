@@ -84,14 +84,34 @@ def mforcing(mov_stack, components, filterid, pairs, custom, forcings, ask,
               default=True, type=bool)
 @click.option('-o', '--outfile', help='Output filename (?=auto)',
               default=None, type=str)
-def dvv(mov_stack, components, filterid, pairs, custom, show, outfile):
+def ndvv(mov_stack, components, filterid, pairs, custom, show, outfile):
+    """Plot dvv curves with multiple filters.
+
+    Plot velocity curves obtained by the stretching method in
+    an almost standard msnoise way. Multiple filters are possible."""
+
+    from .dvv_scripts.ndvv import main
+    main(mov_stack, components, filterid, pairs, custom, show, outfile)
+
+
+@click.command()
+@click.option('-m', '--mov_stack', default=0, help='Plot specific mov stacks')
+@click.option('-c', '--components', default="ZZ", help='Components (ZZ, ZR,...)')
+@click.option('-f', '--filterid', default=1, help='Filter ID')
+@click.option('-p', '--pairs', default=[], help='Plot a specific pair',
+              multiple=True)
+@click.option('-s', '--show', help='Show interactively?',
+              default=True, type=bool)
+@click.option('-o', '--outfile', help='Output filename (?=auto)',
+              default=None, type=str)
+def dvv(mov_stack, components, filterid, pairs, show, outfile):
     """Plot dvv curves in standard msnoise format.
 
     Plot velocity curves obtained by the stretching method in
-    the standard msnoise way. Multiple filters are possible."""
+    the standard msnoise way. """
 
-    from .dvv_scripts.dvv_mov import main
-    main(mov_stack, components, filterid, pairs, custom, show, outfile)
+    from .dvv_scripts.dvv import main
+    main(mov_stack, components, filterid, pairs, show, outfile)
 
 
 @click.command()
@@ -169,6 +189,7 @@ def stretching(ctx, threads, delay):
 stretch.add_command(plot)
 plot.add_command(forcing)
 plot.add_command(mforcing)
+plot.add_command(ndvv)
 plot.add_command(dvv)
 plot.add_command(corr)
 plot.add_command(install)

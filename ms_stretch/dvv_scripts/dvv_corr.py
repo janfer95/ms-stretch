@@ -5,7 +5,7 @@ their respective correlation coefficients in a subplot.
 
 Example:
 
-``msnoise plugin plot corr`` will plot all defaults.
+``msnoise p stretch plot corr`` will plot all defaults.
 """
 
 import matplotlib.gridspec as gridspec
