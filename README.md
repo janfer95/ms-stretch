@@ -39,7 +39,7 @@ original ``msnoise plot dvv`` command as possible.
 ### Plotting multiple filters
 
 While working with the stretching method one often tries out different lag
-time windows for the same filters. To better compare this results they can be
+time windows (LTW) for the same filters. To better compare this results they can be
 plotted together by simply calling the filter argument multiple times.
 
 * ``msnoise p stretch plot ndvv -f 1 -f 2`` plots the dvv curves corresponding to the two filters with otherwise default values (ndvv stands for new dvv).
