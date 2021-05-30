@@ -16,7 +16,7 @@ correlation parts of the curve.
 
 Examples can be found [here](https://github.com/janfer95/ms-stretch-examples/tree/master).
 
-For questions, comments and bugs please contact jfkuehn@gfz-potsdam.de.
+For questions, comments and bugs please contact janfer@gmx.net.
 
 ## Installation
 * Follow the MSNoise installation instructions ([here](http://msnoise.org/doc/installation.html))
